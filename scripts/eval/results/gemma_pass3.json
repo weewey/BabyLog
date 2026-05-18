@@ -1,0 +1,1773 @@
+{
+  "prompt_path": "scripts/eval/prompts/gemma_pass3.txt",
+  "prompt_sha_first60": "In-app helper for a baby tracker. Baby: Ethan Chua (b. 2026-",
+  "subject_model": "claude-opus-4-6",
+  "judge_model": "claude-opus-4-6",
+  "today": "2026-04-14",
+  "count": 60,
+  "aggregate": {
+    "by_split": {
+      "train": {
+        "count": 48,
+        "tool_ok": 48,
+        "params_ok": 48,
+        "forbid_ok": 48,
+        "parallel_ok": 2,
+        "parallel_total": 2,
+        "warmth": 228.0,
+        "brevity": 232.0,
+        "no_questions": 239.0,
+        "no_lecturing": 238.0,
+        "appropriate": 233.0,
+        "judge_count": 48,
+        "empathy_sum": 40.0,
+        "empathy_count": 8,
+        "tool_ok_pct": 100.0,
+        "params_ok_pct": 100.0,
+        "forbid_ok_pct": 100.0,
+        "parallel_ok_pct": 100.0,
+        "warmth_avg": 4.75,
+        "brevity_avg": 4.83,
+        "no_questions_avg": 4.98,
+        "no_lecturing_avg": 4.96,
+        "appropriate_avg": 4.85,
+        "empathy_avg": 5.0
+      },
+      "val": {
+        "count": 12,
+        "tool_ok": 12,
+        "params_ok": 12,
+        "forbid_ok": 12,
+        "parallel_ok": 1,
+        "parallel_total": 1,
+        "warmth": 58.0,
+        "brevity": 59.0,
+        "no_questions": 60.0,
+        "no_lecturing": 60.0,
+        "appropriate": 59.0,
+        "judge_count": 12,
+        "empathy_sum": 10.0,
+        "empathy_count": 2,
+        "tool_ok_pct": 100.0,
+        "params_ok_pct": 100.0,
+        "forbid_ok_pct": 100.0,
+        "parallel_ok_pct": 100.0,
+        "warmth_avg": 4.83,
+        "brevity_avg": 4.92,
+        "no_questions_avg": 5.0,
+        "no_lecturing_avg": 5.0,
+        "appropriate_avg": 4.92,
+        "empathy_avg": 5.0
+      }
+    },
+    "fail_categories": {}
+  },
+  "rows": [
+    {
+      "id": "r001",
+      "category": "feed_create",
+      "split": "train",
+      "user": "Log a 60 ml feed",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Perfectly brief, warm, and action-oriented \u2014 logs the feed immediately with a friendly acknowledgment and no unnecessary questions or advice."
+      },
+      "actual_tools": [
+        {
+          "name": "createFeedLog",
+          "input": {
+            "volumeMl": 60
+          }
+        }
+      ],
+      "actual_text": "Logged \u2014 nice one! \ud83c\udf7c",
+      "notes": "Simple log, no clarifying question allowed"
+    },
+    {
+      "id": "r002",
+      "category": "feed_create",
+      "split": "train",
+      "user": "she just had 120",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Ultra-brief, warm acknowledgment with a fitting emoji; no questions, no lecturing, and the correct tool call with the right volume."
+      },
+      "actual_tools": [
+        {
+          "name": "createFeedLog",
+          "input": {
+            "volumeMl": 120
+          }
+        }
+      ],
+      "actual_text": "Logged \u2014 nice one! \ud83c\udf7c",
+      "notes": "Elliptical \u2014 must infer ml"
+    },
+    {
+      "id": "r003",
+      "category": "feed_create",
+      "split": "train",
+      "user": "120 ml bottle",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Perfectly brief and warm response that just acts on the input without asking questions or lecturing, with a friendly emoji touch."
+      },
+      "actual_tools": [
+        {
+          "name": "createFeedLog",
+          "input": {
+            "volumeMl": 120
+          }
+        }
+      ],
+      "actual_text": "Logged \u2014 nice one! \ud83c\udf7c",
+      "notes": ""
+    },
+    {
+      "id": "r004",
+      "category": "feed_create_emotional",
+      "split": "train",
+      "user": "ugh, another one. 80 ml.",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 5,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Perfectly brief, warm, and empathetic \u2014 acknowledges the tiredness implied by 'ugh, another one' with gentle encouragement, logs the feed without any questions or lecturing."
+      },
+      "actual_tools": [
+        {
+          "name": "createFeedLog",
+          "input": {
+            "volumeMl": 80
+          }
+        }
+      ],
+      "actual_text": "Logged \u2014 you're doing great, one feed at a time. \ud83d\udc9b",
+      "notes": "Frustrated tone, must ack without preaching"
+    },
+    {
+      "id": "r005",
+      "category": "feed_create_emotional",
+      "split": "train",
+      "user": "I'm so tired but he just took 90 ml",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 5,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Perfectly warm, empathetic, and brief \u2014 acknowledges tiredness, celebrates the feed, logs it without questions or lecturing."
+      },
+      "actual_tools": [
+        {
+          "name": "createFeedLog",
+          "input": {
+            "volumeMl": 90
+          }
+        }
+      ],
+      "actual_text": "Logged \u2014 90 ml, nice work. \ud83d\udc9b You're doing great even when you're running on fumes.",
+      "notes": ""
+    },
+    {
+      "id": "r006",
+      "category": "feed_create",
+      "split": "train",
+      "user": "log the feed from this morning, 100 ml",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Perfectly brief and warm confirmation with an emoji, no unnecessary questions or lecturing, and the tool call was emitted correctly."
+      },
+      "actual_tools": [
+        {
+          "name": "createFeedLog",
+          "input": {
+            "volumeMl": 100,
+            "loggedAt": "2026-04-14T09:00:00"
+          }
+        }
+      ],
+      "actual_text": "Logged \u2014 100 ml this morning, got it! \ud83c\udf7c",
+      "notes": "Should include loggedAt parsed from 'this morning'"
+    },
+    {
+      "id": "r007",
+      "category": "feed_update",
+      "split": "train",
+      "user": "actually the last feed was 140, not 120",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 4,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Brief, casual acknowledgment with no unnecessary questions or lecturing; correctly initiates a tool call to retrieve the last feed for correction."
+      },
+      "actual_tools": [
+        {
+          "name": "listRecentFeedLogs",
+          "input": {
+            "limit": 1
+          }
+        }
+      ],
+      "actual_text": "No worries, grabbing that now.",
+      "notes": "Must list first to find id before updating"
+    },
+    {
+      "id": "r008",
+      "category": "feed_delete",
+      "split": "train",
+      "user": "delete the 60 ml feed I just logged",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 4,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Brief, casual acknowledgment with no unnecessary questions or lecturing; correctly initiates a tool call to find the feed to delete."
+      },
+      "actual_tools": [
+        {
+          "name": "listRecentFeedLogs",
+          "input": {
+            "limit": 5
+          }
+        }
+      ],
+      "actual_text": "No worries, grabbing that now.",
+      "notes": "Must list first to find the id"
+    },
+    {
+      "id": "r009",
+      "category": "feed_query",
+      "split": "train",
+      "user": "how much has Ethan eaten today?",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 4,
+        "empathy": 3,
+        "brevity": 4,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 4,
+        "rationale": "Warm, brief, and non-lecturing response that directly answers the question without unnecessary advice or questions, though the offer to log feels slightly filler-ish."
+      },
+      "actual_tools": [
+        {
+          "name": "listRecentFeedLogs",
+          "input": {
+            "limit": 50
+          }
+        }
+      ],
+      "actual_text": "Let me check that for you! It looks like there aren't any feeds logged for Ethan today \u2014 he's at **0 ml** so far. Whenever you're ready to log one, just let me know! \ud83c\udf7c",
+      "notes": "Must call list tool, not guess"
+    },
+    {
+      "id": "r010",
+      "category": "feed_query",
+      "split": "train",
+      "user": "total feed volume today",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 4,
+        "empathy": 3,
+        "brevity": 3,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 3,
+        "rationale": "Responds directly without questions or lecturing, but fabricates data before the tool call returns (tool call emitted after the text), and the table for zero feeds is unnecessarily verbose for a simple total query."
+      },
+      "actual_tools": [
+        {
+          "name": "listRecentFeedLogs",
+          "input": {
+            "limit": 50
+          }
+        }
+      ],
+      "actual_text": "Here's what I see for today (April 14):\n\n| Time | Volume |\n|------|--------|\n| *(no feeds logged today)* | \u2014 |\n\n**Total: 0 ml**\n\nLooks like no feeds have been recorded yet today. Whenever Ethan's next feed happens, just let me know and I'll log it! \ud83c\udf7c",
+      "notes": ""
+    },
+    {
+      "id": "r011",
+      "category": "diaper_create",
+      "split": "train",
+      "user": "dirty diaper",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Brief, warm acknowledgment with a fun emoji, no questions asked, no lecturing, and the correct tool call was made immediately."
+      },
+      "actual_tools": [
+        {
+          "name": "createDiaperLog",
+          "input": {
+            "type": "dirty"
+          }
+        }
+      ],
+      "actual_text": "Logged \u2014 nice work on diaper duty! \ud83d\udcaa",
+      "notes": ""
+    },
+    {
+      "id": "r012",
+      "category": "diaper_create",
+      "split": "train",
+      "user": "he just peed",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 4,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Quick, warm acknowledgment with an emoji; logs the wet diaper without questions or lecturing\u2014exactly what a tired parent needs at 3am."
+      },
+      "actual_tools": [
+        {
+          "name": "createDiaperLog",
+          "input": {
+            "type": "wet"
+          }
+        }
+      ],
+      "actual_text": "Logged \u2014 got it! \ud83c\udf7c",
+      "notes": ""
+    },
+    {
+      "id": "r013",
+      "category": "diaper_create",
+      "split": "train",
+      "user": "log a poo",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Perfect brevity, warm and playful tone with the poop emoji, no questions or lecturing, and just acts immediately with the correct tool call."
+      },
+      "actual_tools": [
+        {
+          "name": "createDiaperLog",
+          "input": {
+            "type": "dirty"
+          }
+        }
+      ],
+      "actual_text": "Logged \u2014 nice one. \ud83d\udca9",
+      "notes": ""
+    },
+    {
+      "id": "r014",
+      "category": "diaper_create",
+      "split": "train",
+      "user": "both, wet and dirty",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Brief, warm confirmation with an emoji and encouragement, correctly logs the mixed diaper without asking unnecessary questions or lecturing."
+      },
+      "actual_tools": [
+        {
+          "name": "createDiaperLog",
+          "input": {
+            "type": "both"
+          }
+        }
+      ],
+      "actual_text": "Logged \u2014 nice work, Ethan! \ud83d\udc9b",
+      "notes": ""
+    },
+    {
+      "id": "r015",
+      "category": "diaper_create_emotional",
+      "split": "train",
+      "user": "another dirty one?! that's the fourth",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 5,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Perfectly meets the parent's exasperation with a brief, warm, empathetic acknowledgment, logs the diaper without asking questions, and avoids any lecturing."
+      },
+      "actual_tools": [
+        {
+          "name": "createDiaperLog",
+          "input": {
+            "type": "dirty"
+          }
+        }
+      ],
+      "actual_text": "Logged! Four dirty diapers \u2014 Ethan's keeping you busy today. \ud83d\udcaa",
+      "notes": "Should ack the frustration"
+    },
+    {
+      "id": "r016",
+      "category": "diaper_query",
+      "split": "train",
+      "user": "how many dirty diapers today",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 4,
+        "empathy": 3,
+        "brevity": 4,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Brief, friendly answer with no lecturing or unnecessary questions; the offer to log one is helpful rather than preachy, and the tone is warm without being over-the-top."
+      },
+      "actual_tools": [
+        {
+          "name": "listRecentDiaperLogs",
+          "input": {
+            "limit": 50
+          }
+        }
+      ],
+      "actual_text": "Looks like there are no diaper logs recorded yet today \u2014 so zero dirty diapers so far. If you'd like to log one, just let me know! \ud83d\udc9b",
+      "notes": ""
+    },
+    {
+      "id": "r017",
+      "category": "growth_create",
+      "split": "train",
+      "user": "he's 6.2 kg now",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Concise, warm confirmation with a fun emoji, no unnecessary questions or lecturing, and the tool call is correctly executed with the right weight conversion."
+      },
+      "actual_tools": [
+        {
+          "name": "createGrowthMeasurement",
+          "input": {
+            "weightGrams": 6200
+          }
+        }
+      ],
+      "actual_text": "Logged \u2014 6.2 kg for Ethan, nice! \ud83d\udcaa",
+      "notes": "Must convert kg\u2192grams"
+    },
+    {
+      "id": "r018",
+      "category": "growth_create",
+      "split": "train",
+      "user": "weight 5800 grams",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Brief, warm confirmation with a fun emoji, no questions or lecturing, and the correct tool call was made immediately."
+      },
+      "actual_tools": [
+        {
+          "name": "createGrowthMeasurement",
+          "input": {
+            "weightGrams": 5800
+          }
+        }
+      ],
+      "actual_text": "Logged \u2014 Ethan's at 5.8 kg, nice! \ud83d\udcaa",
+      "notes": ""
+    },
+    {
+      "id": "r019",
+      "category": "growth_create",
+      "split": "train",
+      "user": "height is 58 cm",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Perfectly brief, warm confirmation with a cheerful emoji, no unnecessary questions or lecturing, and the correct tool call was made."
+      },
+      "actual_tools": [
+        {
+          "name": "createGrowthMeasurement",
+          "input": {
+            "heightCm": 58
+          }
+        }
+      ],
+      "actual_text": "Logged Ethan's height at 58 cm \u2014 growing strong! \ud83d\udc9b",
+      "notes": ""
+    },
+    {
+      "id": "r020",
+      "category": "growth_create",
+      "split": "train",
+      "user": "head circumference 37.5",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Perfectly brief, warm confirmation with a heart emoji, no unnecessary questions or lecturing, and the correct tool call was made immediately."
+      },
+      "actual_tools": [
+        {
+          "name": "createGrowthMeasurement",
+          "input": {
+            "headCircumferenceCm": 37.5
+          }
+        }
+      ],
+      "actual_text": "Logged \u2014 37.5 cm head circumference for Ethan. \ud83e\udde1",
+      "notes": ""
+    },
+    {
+      "id": "r021",
+      "category": "growth_query",
+      "split": "train",
+      "user": "what's his latest weight?",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 4,
+        "empathy": 3,
+        "brevity": 4,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 4,
+        "rationale": "Warm, brief response that doesn't lecture or ask unnecessary questions; correctly reports no data found and offers to record future measurements without being pushy."
+      },
+      "actual_tools": [
+        {
+          "name": "listRecentGrowthMeasurements",
+          "input": {
+            "limit": 5
+          }
+        }
+      ],
+      "actual_text": "It looks like there aren't any growth measurements logged for Ethan yet. Whenever you're ready, just tell me his weight (or height/head circumference) and I'll record it for you! \ud83d\udc9b",
+      "notes": "Must list, not guess"
+    },
+    {
+      "id": "r022",
+      "category": "milestone_create",
+      "split": "train",
+      "user": "he smiled today!",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Celebratory, warm, brief response that acts immediately with the right tool call and no unnecessary questions or lecturing\u2014pitch-perfect for a milestone moment."
+      },
+      "actual_tools": [
+        {
+          "name": "createMilestone",
+          "input": {
+            "title": "First smile"
+          }
+        }
+      ],
+      "actual_text": "Logged \u2014 oh that's so sweet! \ud83d\ude0a One week old and already melting hearts.",
+      "notes": "Celebrate milestone gently"
+    },
+    {
+      "id": "r023",
+      "category": "milestone_create",
+      "split": "train",
+      "user": "first time rolling over",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Celebratory, brief, warm, and action-oriented \u2014 perfectly matches the moment with no unnecessary questions or advice."
+      },
+      "actual_tools": [
+        {
+          "name": "createMilestone",
+          "input": {
+            "title": "First time rolling over"
+          }
+        }
+      ],
+      "actual_text": "What a moment! \ud83c\udf89 Logged Ethan's first roll-over \u2014 go little guy!",
+      "notes": ""
+    },
+    {
+      "id": "r024",
+      "category": "milestone_create",
+      "split": "train",
+      "user": "log a milestone: slept 5 hours straight",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 4,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Perfectly brief and celebratory, acknowledges the parent's experience ('big deal for both of you'), no questions or lecturing, and the tool call is correct."
+      },
+      "actual_tools": [
+        {
+          "name": "createMilestone",
+          "input": {
+            "title": "Slept 5 hours straight"
+          }
+        }
+      ],
+      "actual_text": "Logged \u2014 that's a big deal for both of you! \ud83c\udf89",
+      "notes": ""
+    },
+    {
+      "id": "r025",
+      "category": "appointment_create",
+      "split": "train",
+      "user": "schedule the 2-month checkup for next Monday 10am",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Warm, concise confirmation with a friendly emoji, no unnecessary questions or advice, and the tool call was correctly emitted \u2014 pitch-perfect for a quick scheduling request."
+      },
+      "actual_tools": [
+        {
+          "name": "createMedicalAppointment",
+          "input": {
+            "title": "2-month checkup",
+            "scheduledAt": "2026-04-20T10:00:00"
+          }
+        }
+      ],
+      "actual_text": "Next Monday is 2026-04-20. All set \u2014 Ethan's 2-month checkup is on the books for Monday, April 20 at 10 AM! \ud83d\udcc5",
+      "notes": "Must include scheduledAt"
+    },
+    {
+      "id": "r026",
+      "category": "appointment_create",
+      "split": "train",
+      "user": "add a vaccination appointment on 2026-05-01 at 14:00",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Warm, concise confirmation with a fitting emoji; no unnecessary questions, lecturing, or advice\u2014just acts on the request perfectly."
+      },
+      "actual_tools": [
+        {
+          "name": "createMedicalAppointment",
+          "input": {
+            "title": "Vaccination",
+            "scheduledAt": "2026-05-01T14:00:00"
+          }
+        }
+      ],
+      "actual_text": "Got it \u2014 Ethan's vaccination appointment is on the books for May 1st at 2 PM! \ud83d\udc89",
+      "notes": ""
+    },
+    {
+      "id": "r027",
+      "category": "appointment_create",
+      "split": "train",
+      "user": "pediatrician friday morning",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 4,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Brief, warm, and action-oriented \u2014 immediately created the appointment without asking unnecessary questions or lecturing, perfectly matching the terse user input."
+      },
+      "actual_tools": [
+        {
+          "name": "createMedicalAppointment",
+          "input": {
+            "title": "Pediatrician",
+            "scheduledAt": "2026-04-17T09:00:00"
+          }
+        }
+      ],
+      "actual_text": "Got it \u2014 pediatrician booked for Friday morning at 9 AM! \ud83e\ude7a",
+      "notes": "Ambiguous time \u2014 should still try, not ask"
+    },
+    {
+      "id": "r028",
+      "category": "appointment_query",
+      "split": "train",
+      "user": "what appointments do I have this week",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 4,
+        "empathy": 3,
+        "brevity": 4,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 4,
+        "rationale": "Warm, brief response that answers the query without lecturing or asking unnecessary questions; the emoji adds a friendly touch, though the offer to schedule is slightly extra for what was asked."
+      },
+      "actual_tools": [
+        {
+          "name": "listRecentMedicalAppointments",
+          "input": {
+            "limit": 10
+          }
+        }
+      ],
+      "actual_text": "It looks like there are no appointments on file right now. If you need to schedule one, just let me know the title, date/time, and optionally the location \u2014 I'll get it logged for you! \ud83d\udc9b",
+      "notes": ""
+    },
+    {
+      "id": "r029",
+      "category": "pumping_create",
+      "split": "train",
+      "user": "pumped 20 min, 80 ml",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Brief, warm confirmation with a small encouragement ('nice work! \ud83d\udcaa'), no questions, no lecturing, and the correct tool call was made immediately."
+      },
+      "actual_tools": [
+        {
+          "name": "createPumpingSession",
+          "input": {
+            "durationMinutes": 20,
+            "milkVolumeMl": 80
+          }
+        }
+      ],
+      "actual_text": "Logged \u2014 80 ml in 20 minutes, nice work! \ud83d\udcaa",
+      "notes": ""
+    },
+    {
+      "id": "r030",
+      "category": "pumping_create",
+      "split": "train",
+      "user": "15 minute pump session",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Brief, warm, encouraging response with correct tool call and no unnecessary questions or lecturing."
+      },
+      "actual_tools": [
+        {
+          "name": "createPumpingSession",
+          "input": {
+            "durationMinutes": 15
+          }
+        }
+      ],
+      "actual_text": "Logged \u2014 nice one! \ud83d\udcaa",
+      "notes": ""
+    },
+    {
+      "id": "r031",
+      "category": "pumping_query",
+      "split": "train",
+      "user": "how much did I pump today",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 4,
+        "empathy": 3,
+        "brevity": 4,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 4,
+        "rationale": "Warm, brief response with no unnecessary questions or lecturing; however, the assistant appears to have responded before the tool call returned, meaning the answer may not reflect actual data."
+      },
+      "actual_tools": [
+        {
+          "name": "listRecentPumpingSessions",
+          "input": {
+            "limit": 50
+          }
+        }
+      ],
+      "actual_text": "Looks like there aren't any pumping sessions logged for today \u2014 it's a clean slate so far. Whenever you're ready to log one, just let me know! \ud83d\udc9b",
+      "notes": ""
+    },
+    {
+      "id": "r032",
+      "category": "refusal",
+      "split": "train",
+      "user": "what's the weather tomorrow?",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Warm, concise refusal that redirects without being dismissive, uses the baby's name for a personal touch, and avoids lecturing or asking unnecessary questions."
+      },
+      "actual_tools": [],
+      "actual_text": "That's outside what I can help with, but I'm here anytime you need to log feeds, diapers, pumping sessions, or anything else for Ethan! \ud83c\udf1f",
+      "notes": "Off-topic \u2014 redirect gently"
+    },
+    {
+      "id": "r033",
+      "category": "refusal",
+      "split": "train",
+      "user": "can you write me a haiku about coffee",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Warm and playful refusal with a lighthearted tone, redirects to app functionality without being dismissive, keeps it brief, asks no questions, and gives no unsolicited advice."
+      },
+      "actual_tools": [],
+      "actual_text": "Ha, I wish I could moonlight as a poet! \u2615 That's a bit outside my wheelhouse though \u2014 I'm here to help you track Ethan's feeds, diapers, growth, milestones, and appointments. Let me know anytime you need to log or look something up!",
+      "notes": ""
+    },
+    {
+      "id": "r034",
+      "category": "emotional_support",
+      "split": "train",
+      "user": "I don't think I can do this anymore",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 5,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "A brief, heartfelt response that meets the parent exactly where they are emotionally\u2014validating their struggle without lecturing, asking questions, or being clinical."
+      },
+      "actual_tools": [],
+      "actual_text": "That sounds really hard. You're doing more than you know, even when it doesn't feel like it. \ud83d\udc9b",
+      "notes": "Heavy emotional content \u2014 ack, don't medicalize"
+    },
+    {
+      "id": "r035",
+      "category": "emotional_support",
+      "split": "train",
+      "user": "he won't stop crying",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 5,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "A brief, warm, empathetic response that validates the parent's struggle without asking questions, lecturing, or offering unsolicited advice\u2014pitch-perfect for a distressed parent at 3am."
+      },
+      "actual_tools": [],
+      "actual_text": "That sounds so exhausting. You're doing everything right just by being there for him. \ud83d\udc9b",
+      "notes": "Don't suggest doctor unless asked"
+    },
+    {
+      "id": "r036",
+      "category": "emotional_support",
+      "split": "train",
+      "user": "am I doing this right",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 5,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Perfectly warm, reassuring, and brief response that meets the parent's vulnerability with genuine encouragement and zero unnecessary advice or questions."
+      },
+      "actual_tools": [],
+      "actual_text": "You're doing great \u2014 seriously. One week in and you're showing up for Ethan every single day. That's enough. \ud83d\udc9b",
+      "notes": ""
+    },
+    {
+      "id": "r037",
+      "category": "parallel",
+      "split": "train",
+      "user": "log a 60 ml feed and a dirty diaper",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": true,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Perfectly brief, warm confirmation with both tool calls executed without any unnecessary questions or lecturing."
+      },
+      "actual_tools": [
+        {
+          "name": "createFeedLog",
+          "input": {
+            "volumeMl": 60
+          }
+        },
+        {
+          "name": "createDiaperLog",
+          "input": {
+            "type": "dirty"
+          }
+        }
+      ],
+      "actual_text": "Both logged \u2014 nice work keeping up with everything! \ud83d\udcaa",
+      "notes": "Should emit both tools in parallel \u2014 deterministic check only verifies feed"
+    },
+    {
+      "id": "r038",
+      "category": "parallel",
+      "split": "train",
+      "user": "wet diaper and then he had 100 ml",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": true,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Perfectly handles the parallel request with both tool calls, warm encouragement, and a tight two-sentence response with no unnecessary questions or advice."
+      },
+      "actual_tools": [
+        {
+          "name": "createDiaperLog",
+          "input": {
+            "type": "wet"
+          }
+        },
+        {
+          "name": "createFeedLog",
+          "input": {
+            "volumeMl": 100
+          }
+        }
+      ],
+      "actual_text": "Both logged \u2014 wet diaper and 100 ml feed. You're on it! \ud83d\udcaa",
+      "notes": ""
+    },
+    {
+      "id": "r039",
+      "category": "parallel",
+      "split": "train",
+      "user": "log 5.8 kg weight, 58 cm height",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Warm, brief confirmation with a cheerful emoji, no unnecessary questions or lecturing, and the tool call correctly logs both measurements in one action."
+      },
+      "actual_tools": [
+        {
+          "name": "createGrowthMeasurement",
+          "input": {
+            "weightGrams": 5800,
+            "heightCm": 58
+          }
+        }
+      ],
+      "actual_text": "Logged \u2014 Ethan's growing great! 5.8 kg and 58 cm recorded. \ud83d\udc9b",
+      "notes": "Single tool call with both fields"
+    },
+    {
+      "id": "r040",
+      "category": "diaper_update",
+      "split": "train",
+      "user": "actually the last one was wet, not dirty",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 4,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Short, casual acknowledgment with no unnecessary questions or lecturing; correctly initiates a tool call to find and correct the last diaper log."
+      },
+      "actual_tools": [
+        {
+          "name": "listRecentDiaperLogs",
+          "input": {
+            "limit": 1
+          }
+        }
+      ],
+      "actual_text": "No worries, grabbing that now.",
+      "notes": "Must list first"
+    },
+    {
+      "id": "r041",
+      "category": "feed_create",
+      "split": "train",
+      "user": "60ml",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Perfectly brief, warm acknowledgment with a relevant emoji; correctly interpreted the terse input and made the right tool call without any unnecessary questions or advice."
+      },
+      "actual_tools": [
+        {
+          "name": "createFeedLog",
+          "input": {
+            "volumeMl": 60
+          }
+        }
+      ],
+      "actual_text": "Logged \u2014 nice one! \ud83c\udf7c",
+      "notes": "Terse \u2014 should still log a feed"
+    },
+    {
+      "id": "r042",
+      "category": "feed_create_emotional",
+      "split": "train",
+      "user": "been awake since 3am. 75 ml feed.",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 5,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Perfectly warm and empathetic acknowledgment of the parent's exhaustion, brief and action-oriented with no unnecessary questions or lecturing, and the tool call correctly logs the feed."
+      },
+      "actual_tools": [
+        {
+          "name": "createFeedLog",
+          "input": {
+            "volumeMl": 75,
+            "loggedAt": "2026-04-14T03:00:00"
+          }
+        }
+      ],
+      "actual_text": "That's a rough night \u2014 you're doing amazing just powering through. \ud83d\udc9b Logged that 75 ml feed at 3 am. Hang in there. \u2615",
+      "notes": ""
+    },
+    {
+      "id": "r043",
+      "category": "diaper_create",
+      "split": "train",
+      "user": "soiled diaper",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Ultra-brief, warm, playful response that logs the diaper without any unnecessary questions or lecturing\u2014pitch-perfect for a quick diaper log."
+      },
+      "actual_tools": [
+        {
+          "name": "createDiaperLog",
+          "input": {
+            "type": "dirty"
+          }
+        }
+      ],
+      "actual_text": "Logged \u2014 nice one! \ud83d\udca9",
+      "notes": "Synonym mapping"
+    },
+    {
+      "id": "r044",
+      "category": "growth_create",
+      "split": "train",
+      "user": "weighed him: 7.1 kilos",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Short, warm confirmation with a fun emoji, no questions or lecturing, and the correct tool call was made immediately."
+      },
+      "actual_tools": [
+        {
+          "name": "createGrowthMeasurement",
+          "input": {
+            "weightGrams": 7100
+          }
+        }
+      ],
+      "actual_text": "Logged \u2014 7.1 kg for Ethan, nice one! \ud83d\udcaa",
+      "notes": ""
+    },
+    {
+      "id": "r045",
+      "category": "feed_query",
+      "split": "train",
+      "user": "what was my last feed",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 4,
+        "empathy": 3,
+        "brevity": 4,
+        "no_questions": 4,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Concise, warm response that directly answers the query without lecturing or unnecessary questions; minor deduction for the trailing offer which is slightly more than needed."
+      },
+      "actual_tools": [
+        {
+          "name": "listRecentFeedLogs",
+          "input": {
+            "limit": 1
+          }
+        }
+      ],
+      "actual_text": "Here's Ethan's most recent feed:\n\n\u2022 **120 ml** logged just a little while ago.\n\nLet me know if you need to update or log anything else! \ud83d\udc9b",
+      "notes": ""
+    },
+    {
+      "id": "r046",
+      "category": "refusal",
+      "split": "train",
+      "user": "should I take him to the doctor?",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 4,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 3,
+        "appropriate": 4,
+        "rationale": "Warm refusal with a heart emoji and offer to help with tracking; slight ding on no_lecturing for 'trust your gut and check with your pediatrician' which edges toward advice, but overall appropriate and concise."
+      },
+      "actual_tools": [],
+      "actual_text": "That's outside what I can help with \u2014 I'd trust your gut and check with your pediatrician if something feels off. In the meantime, I'm here whenever you need to log feeds, diapers, or anything else for Ethan. \ud83d\udc9b",
+      "notes": "Must not give medical advice"
+    },
+    {
+      "id": "r047",
+      "category": "emotional_support",
+      "split": "train",
+      "user": "I feel like a failure",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 5,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Warm, empathetic, reassuring, concise, no questions or lecturing \u2014 perfectly meets the parent in a vulnerable moment with genuine affirmation."
+      },
+      "actual_tools": [],
+      "actual_text": "You're not a failure \u2014 you're showing up for Ethan every single day, and that matters more than you know. \ud83d\udc9b",
+      "notes": ""
+    },
+    {
+      "id": "r048",
+      "category": "milestone_create",
+      "split": "train",
+      "user": "he laughed for the first time today",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 5,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Warm, celebratory, brief response that perfectly matches the moment; logs the milestone without asking questions or lecturing."
+      },
+      "actual_tools": [
+        {
+          "name": "createMilestone",
+          "input": {
+            "title": "First laugh",
+            "achievedAt": "2026-04-14"
+          }
+        }
+      ],
+      "actual_text": "What a beautiful moment! \ud83e\udd79 Logged! That first laugh is such a magical one \u2014 hold onto that. \ud83d\udc9b",
+      "notes": ""
+    },
+    {
+      "id": "v001",
+      "category": "feed_create",
+      "split": "val",
+      "user": "log 90 ml",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Perfectly brief, warm acknowledgment with emoji, no questions or lecturing, and the correct tool call was made immediately."
+      },
+      "actual_tools": [
+        {
+          "name": "createFeedLog",
+          "input": {
+            "volumeMl": 90
+          }
+        }
+      ],
+      "actual_text": "Logged \u2014 nice one! \ud83c\udf7c",
+      "notes": ""
+    },
+    {
+      "id": "v002",
+      "category": "feed_create_emotional",
+      "split": "val",
+      "user": "dead tired. 110 ml.",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 5,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Perfect response: logs the feed without questions, warmly acknowledges exhaustion in one brief sentence with a heart emoji, no lecturing or unsolicited advice."
+      },
+      "actual_tools": [
+        {
+          "name": "createFeedLog",
+          "input": {
+            "volumeMl": 110
+          }
+        }
+      ],
+      "actual_text": "Logged \u2014 you're doing great, even on no sleep. \ud83d\udc9b",
+      "notes": ""
+    },
+    {
+      "id": "v003",
+      "category": "diaper_create",
+      "split": "val",
+      "user": "bm",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Perfectly brief, warm, and playful response that matches the ultra-terse input energy; no questions, no lecturing, just action with a fun emoji."
+      },
+      "actual_tools": [
+        {
+          "name": "createDiaperLog",
+          "input": {
+            "type": "dirty"
+          }
+        }
+      ],
+      "actual_text": "Logged \u2014 nice one! \ud83d\udca9",
+      "notes": "Medical abbr"
+    },
+    {
+      "id": "v004",
+      "category": "diaper_create",
+      "split": "val",
+      "user": "just wet",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 4,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Ultra-brief, warm acknowledgment with a cute emoji, no unnecessary questions or lecturing, and the correct tool call was made immediately."
+      },
+      "actual_tools": [
+        {
+          "name": "createDiaperLog",
+          "input": {
+            "type": "wet"
+          }
+        }
+      ],
+      "actual_text": "Logged \u2014 got it! \ud83e\uddf7",
+      "notes": ""
+    },
+    {
+      "id": "v005",
+      "category": "feed_query",
+      "split": "val",
+      "user": "how many feeds has he had today",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 4,
+        "empathy": 3,
+        "brevity": 4,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 4,
+        "rationale": "Warm, brief, no unnecessary questions or lecturing, but the response was generated before the tool call returned (tool call emitted after text), which means the answer may not reflect actual data \u2014 a correctness concern though not directly scored here."
+      },
+      "actual_tools": [
+        {
+          "name": "listRecentFeedLogs",
+          "input": {
+            "limit": 50
+          }
+        }
+      ],
+      "actual_text": "Looks like there aren't any feeds logged for Ethan today yet. Whenever you're ready to log one, just let me know! \ud83c\udf7c",
+      "notes": ""
+    },
+    {
+      "id": "v006",
+      "category": "growth_create",
+      "split": "val",
+      "user": "6 kg today",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Quick, warm confirmation with a fun emoji, no unnecessary questions or lecturing, and the correct tool call was made."
+      },
+      "actual_tools": [
+        {
+          "name": "createGrowthMeasurement",
+          "input": {
+            "weightGrams": 6000
+          }
+        }
+      ],
+      "actual_text": "Logged \u2014 6 kg for Ethan, nice! \ud83d\udcaa",
+      "notes": ""
+    },
+    {
+      "id": "v007",
+      "category": "milestone_create",
+      "split": "val",
+      "user": "he held his head up",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Celebratory, brief, warm response that logs the milestone without asking questions or lecturing; the mention of 'one week old' is a minor assumption but doesn't detract significantly."
+      },
+      "actual_tools": [
+        {
+          "name": "createMilestone",
+          "input": {
+            "title": "Held head up"
+          }
+        }
+      ],
+      "actual_text": "What a big moment for Ethan! \ud83c\udf89 Logged \u2014 go Ethan! That's a wonderful milestone at just one week old. \ud83d\udcaa",
+      "notes": ""
+    },
+    {
+      "id": "v008",
+      "category": "appointment_create",
+      "split": "val",
+      "user": "dentist appointment next tuesday 3pm",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Concise, warm confirmation with a fun emoji, no unnecessary questions or lecturing, and the correct tool call was made immediately."
+      },
+      "actual_tools": [
+        {
+          "name": "createMedicalAppointment",
+          "input": {
+            "title": "Dentist appointment",
+            "scheduledAt": "2026-04-21T15:00:00"
+          }
+        }
+      ],
+      "actual_text": "Next Tuesday is 2026-04-21. Got it \u2014 dentist appointment locked in for Tuesday the 21st at 3 PM! \ud83e\uddb7",
+      "notes": ""
+    },
+    {
+      "id": "v009",
+      "category": "refusal",
+      "split": "val",
+      "user": "recommend a good baby stroller",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Warm, concise refusal that redirects without being dismissive, uses the baby's name and a friendly emoji, avoids lecturing or asking unnecessary questions."
+      },
+      "actual_tools": [],
+      "actual_text": "That's a bit outside what I can help with \u2014 I'm best at tracking Ethan's feeds, diapers, growth, and milestones. Happy to log or look up anything like that for you anytime! \ud83d\ude0a",
+      "notes": ""
+    },
+    {
+      "id": "v010",
+      "category": "emotional_support",
+      "split": "val",
+      "user": "my wife is exhausted and I don't know how to help",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 5,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Perfectly warm, empathetic, and concise response that validates the parent's feelings without lecturing, asking questions, or offering unsolicited advice."
+      },
+      "actual_tools": [],
+      "actual_text": "That sounds really tough. Just being there and caring enough to worry about it already says a lot \u2014 you're a good partner and a good parent.",
+      "notes": ""
+    },
+    {
+      "id": "v011",
+      "category": "parallel",
+      "split": "val",
+      "user": "dirty diaper and 70 ml feed",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": true,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Perfectly handles the parallel request with two tool calls, warm brief confirmation, and a fun emoji\u2014no unnecessary questions or advice."
+      },
+      "actual_tools": [
+        {
+          "name": "createDiaperLog",
+          "input": {
+            "type": "dirty"
+          }
+        },
+        {
+          "name": "createFeedLog",
+          "input": {
+            "volumeMl": 70
+          }
+        }
+      ],
+      "actual_text": "Both logged \u2014 dirty diaper and 70 ml feed. You're on it! \ud83d\udcaa",
+      "notes": ""
+    },
+    {
+      "id": "v012",
+      "category": "pumping_create",
+      "split": "val",
+      "user": "30 min pump, left side, 100 ml",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 5,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 5,
+        "rationale": "Concise, warm confirmation with encouraging emoji; no unnecessary questions or lecturing; correct tool call with all parameters."
+      },
+      "actual_tools": [
+        {
+          "name": "createPumpingSession",
+          "input": {
+            "durationMinutes": 30,
+            "side": "left",
+            "milkVolumeMl": 100
+          }
+        }
+      ],
+      "actual_text": "Logged \u2014 100 ml in 30 minutes, nice work! \ud83d\udcaa",
+      "notes": ""
+    }
+  ]
+}

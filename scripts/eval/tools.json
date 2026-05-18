@@ -1,0 +1,273 @@
+[
+  {
+    "name": "createFeedLog",
+    "description": "Record a new feed for the baby with volume in millilitres. Use the current time if the parent does not specify when.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "volumeMl": {"type": "integer", "description": "Volume of the feed in millilitres (1–500)."},
+        "loggedAt": {"type": "string", "description": "ISO8601 timestamp. Defaults to now if omitted."}
+      },
+      "required": ["volumeMl"]
+    }
+  },
+  {
+    "name": "updateFeedLog",
+    "description": "Update an existing feed log by id. Only fields supplied in the arguments are changed; omitted fields are left as-is.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "id": {"type": "string"},
+        "volumeMl": {"type": "integer"},
+        "loggedAt": {"type": "string"}
+      },
+      "required": ["id"]
+    }
+  },
+  {
+    "name": "deleteFeedLog",
+    "description": "Delete a previously-logged feed by id.",
+    "input_schema": {
+      "type": "object",
+      "properties": {"id": {"type": "string"}},
+      "required": ["id"]
+    }
+  },
+  {
+    "name": "listRecentFeedLogs",
+    "description": "List the most recent feed log entries, newest first. Use this when the user refers to an existing feed such as 'my last feed'.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "limit": {"type": "integer", "description": "Defaults to 5. Pass a larger number for 'today', 'this week'."}
+      }
+    }
+  },
+  {
+    "name": "createDiaperLog",
+    "description": "Record a diaper change. 'wet' is urine only, 'dirty' is stool only, 'both' is both in the same diaper.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "type": {"type": "string", "enum": ["wet", "dirty", "both"]},
+        "loggedAt": {"type": "string"}
+      },
+      "required": ["type"]
+    }
+  },
+  {
+    "name": "updateDiaperLog",
+    "description": "Update an existing diaper log by id.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "id": {"type": "string"},
+        "type": {"type": "string", "enum": ["wet", "dirty", "both"]},
+        "loggedAt": {"type": "string"},
+        "notes": {"type": "string"}
+      },
+      "required": ["id"]
+    }
+  },
+  {
+    "name": "deleteDiaperLog",
+    "description": "Delete a previously-logged diaper by id.",
+    "input_schema": {
+      "type": "object",
+      "properties": {"id": {"type": "string"}},
+      "required": ["id"]
+    }
+  },
+  {
+    "name": "listRecentDiaperLogs",
+    "description": "List the most recent diaper log entries, newest first.",
+    "input_schema": {
+      "type": "object",
+      "properties": {"limit": {"type": "integer"}}
+    }
+  },
+  {
+    "name": "createGrowthMeasurement",
+    "description": "Record a growth measurement. Provide at least one of weight (grams), height (cm), or head circumference (cm).",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "weightGrams": {"type": "integer"},
+        "heightCm": {"type": "number"},
+        "headCircumferenceCm": {"type": "number"},
+        "measuredAt": {"type": "string"}
+      }
+    }
+  },
+  {
+    "name": "updateGrowthMeasurement",
+    "description": "Update an existing growth measurement by id.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "id": {"type": "string"},
+        "weightGrams": {"type": "integer"},
+        "heightCm": {"type": "number"},
+        "headCircumferenceCm": {"type": "number"},
+        "date": {"type": "string"},
+        "notes": {"type": "string"}
+      },
+      "required": ["id"]
+    }
+  },
+  {
+    "name": "deleteGrowthMeasurement",
+    "description": "Delete a previously-logged growth measurement by id.",
+    "input_schema": {
+      "type": "object",
+      "properties": {"id": {"type": "string"}},
+      "required": ["id"]
+    }
+  },
+  {
+    "name": "listRecentGrowthMeasurements",
+    "description": "List the most recent growth measurements, newest first.",
+    "input_schema": {
+      "type": "object",
+      "properties": {"limit": {"type": "integer"}}
+    }
+  },
+  {
+    "name": "createMilestone",
+    "description": "Record a developmental milestone with a short title and optional notes.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "title": {"type": "string"},
+        "notes": {"type": "string"},
+        "achievedAt": {"type": "string"}
+      },
+      "required": ["title"]
+    }
+  },
+  {
+    "name": "updateMilestone",
+    "description": "Update an existing milestone by id.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "id": {"type": "string"},
+        "title": {"type": "string"},
+        "achievedAt": {"type": "string"},
+        "notes": {"type": "string"}
+      },
+      "required": ["id"]
+    }
+  },
+  {
+    "name": "deleteMilestone",
+    "description": "Delete a previously-logged milestone by id.",
+    "input_schema": {
+      "type": "object",
+      "properties": {"id": {"type": "string"}},
+      "required": ["id"]
+    }
+  },
+  {
+    "name": "listRecentMilestones",
+    "description": "List the most recent developmental milestones, newest first.",
+    "input_schema": {
+      "type": "object",
+      "properties": {"limit": {"type": "integer"}}
+    }
+  },
+  {
+    "name": "createMedicalAppointment",
+    "description": "Schedule a new medical appointment with a title and ISO8601 timestamp. Optional location and notes.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "title": {"type": "string"},
+        "scheduledAt": {"type": "string"},
+        "location": {"type": "string"},
+        "notes": {"type": "string"}
+      },
+      "required": ["title", "scheduledAt"]
+    }
+  },
+  {
+    "name": "updateMedicalAppointment",
+    "description": "Update an existing medical appointment by id.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "id": {"type": "string"},
+        "title": {"type": "string"},
+        "scheduledAt": {"type": "string"},
+        "location": {"type": "string"},
+        "notes": {"type": "string"}
+      },
+      "required": ["id"]
+    }
+  },
+  {
+    "name": "deleteMedicalAppointment",
+    "description": "Delete a previously-scheduled medical appointment by id.",
+    "input_schema": {
+      "type": "object",
+      "properties": {"id": {"type": "string"}},
+      "required": ["id"]
+    }
+  },
+  {
+    "name": "listRecentMedicalAppointments",
+    "description": "List the most recent medical appointments, newest first.",
+    "input_schema": {
+      "type": "object",
+      "properties": {"limit": {"type": "integer"}}
+    }
+  },
+  {
+    "name": "createPumpingSession",
+    "description": "Record a new pumping session. Duration in minutes is required.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "startedAt": {"type": "string"},
+        "durationMinutes": {"type": "integer"},
+        "side": {"type": "string", "enum": ["left", "right", "both"]},
+        "milkVolumeMl": {"type": "integer"},
+        "notes": {"type": "string"}
+      },
+      "required": ["durationMinutes"]
+    }
+  },
+  {
+    "name": "updatePumpingSession",
+    "description": "Update an existing pumping session by id.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "id": {"type": "string"},
+        "startedAt": {"type": "string"},
+        "durationMinutes": {"type": "integer"},
+        "side": {"type": "string", "enum": ["left", "right", "both"]},
+        "milkVolumeMl": {"type": "integer"},
+        "notes": {"type": "string"}
+      },
+      "required": ["id"]
+    }
+  },
+  {
+    "name": "deletePumpingSession",
+    "description": "Delete a previously-logged pumping session by id.",
+    "input_schema": {
+      "type": "object",
+      "properties": {"id": {"type": "string"}},
+      "required": ["id"]
+    }
+  },
+  {
+    "name": "listRecentPumpingSessions",
+    "description": "List the most recent pumping sessions, newest first.",
+    "input_schema": {
+      "type": "object",
+      "properties": {"limit": {"type": "integer"}}
+    }
+  }
+]

@@ -1,0 +1,54 @@
+# macOS
+.DS_Store
+
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+
+# Swift Package Manager
+.build/
+Packages/
+Package.resolved
+*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
+
+# CocoaPods
+Pods/
+
+# Carthage
+Carthage/Build/
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+fastlane/README.md
+
+# Voice / Anthropic API local config
+LittleE/BuildConfig.plist
+
+# Secrets
+*.p8
+*.p12
+*.mobileprovision
+AuthKey_*.p8
+.env
+.env.*
+.secrets/
+
+# Orchestrator
+.venv/
+scripts/state/
+scripts/__pycache__/
+
+# Vendored gems / local bundler
+vendor/
+.bundle/
+
+# Local agent worktrees
+.claude/worktrees/

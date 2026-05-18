@@ -1,0 +1,5 @@
+# Set via environment or fill in after creating app in App Store Connect
+app_identifier(ENV["APP_IDENTIFIER"] || "com.yewwee.LittleE")
+apple_id(ENV["APPLE_ID"])
+itc_team_id(ENV["ITC_TEAM_ID"])
+team_id(ENV["TEAM_ID"])

@@ -1,0 +1,32 @@
+name: TestFlight
+
+on:
+  push:
+    tags: ['release-*']
+  workflow_dispatch:
+
+jobs:
+  beta:
+    name: Upload to TestFlight
+    runs-on: [self-hosted, macOS]
+    environment: testflight
+    env:
+      PATH: /opt/homebrew/opt/ruby/bin:/opt/homebrew/lib/ruby/gems/3.4.0/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install dependencies
+        run: bundle install --path vendor/bundle --quiet
+
+      - name: Fastlane beta
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_CONTENT: ${{ secrets.ASC_KEY_CONTENT }}
+          APP_IDENTIFIER: ${{ vars.APP_IDENTIFIER }}
+          APPLE_ID: ${{ vars.APPLE_ID }}
+          ITC_TEAM_ID: ${{ vars.ITC_TEAM_ID }}
+          TEAM_ID: ${{ vars.TEAM_ID }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+        run: bundle exec fastlane beta

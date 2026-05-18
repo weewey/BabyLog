@@ -1,0 +1,69 @@
+{
+  "prompt_path": "scripts/eval/prompts/claude_baseline.txt",
+  "prompt_sha_first60": "You are the in-app helper inside a private baby-tracking app",
+  "subject_model": "claude-opus-4-6",
+  "judge_model": "claude-opus-4-6",
+  "today": "2026-04-14",
+  "count": 1,
+  "aggregate": {
+    "by_split": {
+      "train": {
+        "count": 1,
+        "tool_ok": 1,
+        "params_ok": 1,
+        "forbid_ok": 1,
+        "parallel_ok": 0,
+        "parallel_total": 0,
+        "warmth": 3,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 4,
+        "judge_count": 1,
+        "tool_ok_pct": 100.0,
+        "params_ok_pct": 100.0,
+        "forbid_ok_pct": 100.0,
+        "parallel_ok_pct": null,
+        "warmth_avg": 3.0,
+        "empathy_avg": 3.0,
+        "brevity_avg": 5.0,
+        "no_questions_avg": 5.0,
+        "no_lecturing_avg": 5.0,
+        "appropriate_avg": 4.0
+      }
+    },
+    "fail_categories": {}
+  },
+  "rows": [
+    {
+      "id": "r001",
+      "category": "feed_create",
+      "split": "train",
+      "user": "Log a 60 ml feed",
+      "tool_ok": true,
+      "params_ok": true,
+      "forbid_ok": true,
+      "parallel_ok": null,
+      "tone": {
+        "warmth": 3,
+        "empathy": 3,
+        "brevity": 5,
+        "no_questions": 5,
+        "no_lecturing": 5,
+        "appropriate": 4,
+        "rationale": "Executed the feed log silently with no questions or lecturing, which is efficient and brief, though a short warm confirmation message would have been nice."
+      },
+      "actual_tools": [
+        {
+          "name": "createFeedLog",
+          "input": {
+            "volumeMl": 60
+          }
+        }
+      ],
+      "actual_text": "",
+      "notes": "Simple log, no clarifying question allowed"
+    }
+  ]
+}
