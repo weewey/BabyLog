@@ -6,17 +6,10 @@ import Foundation
 public enum ChatBackend: String, Sendable, CaseIterable, Codable {
     /// Apple Foundation Models (iOS 26, on-device, zero download).
     case apple
-    /// Anthropic Claude via HTTPS — requires an API key stored in Keychain.
-    case claude
     /// Gemma 4 E2B via MLX Swift, on-device — requires a one-time
     /// ~1.5 GB model download fetched by `mlx-swift-lm`'s built-in
     /// `Downloader`. Progress surfaces as `ChatDelta.modelLoading`.
     case gemma
-    /// Qwen 2.5 1.5B Instruct (Q4_K_M GGUF) via `llama.cpp`, on-device.
-    /// Unlike Gemma/MLX, llama.cpp runs on the x86 iOS simulator (CPU
-    /// inference) which unlocks TDD for the on-device chat path.
-    /// Requires a one-time ~1 GB model download.
-    case qwen
 }
 
 /// Streaming increment from a `ChatSession`. Backends emit these as the

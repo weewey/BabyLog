@@ -4,7 +4,7 @@
 <dict>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
-		<string>com.littlee.feedRefresh</string>
+		<string>com.babylog.feedRefresh</string>
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>
