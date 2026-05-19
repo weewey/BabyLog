@@ -56,22 +56,21 @@ final class ChatTabE2ETests: XCTestCase {
     // MARK: - Backend picker
 
     func test_backendPicker_switchesSelection() throws {
-        let menu = app.buttons["chatBackendMenu"]
-        XCTAssertTrue(menu.waitForExistence(timeout: 3))
-        menu.tap()
+        // With only Gemma in the picker the app auto-switches from Apple to
+        // Gemma on first appear. Verify the selection marker reflects this and
+        // persists across a relaunch without the reset flag.
+        let marker = app.staticTexts["chatSelectedBackendMarker"]
+        XCTAssertTrue(marker.waitForExistence(timeout: 5))
+        XCTAssertEqual(marker.label, "gemma",
+                       "expected default backend to be gemma (auto-switched from apple)")
 
-        let claudeOption = app.buttons["chatBackendOption_claude"]
-        XCTAssertTrue(claudeOption.waitForExistence(timeout: 2))
-        claudeOption.tap()
-
-        // Relaunch WITHOUT the reset flag to verify persistence.
         app.terminate()
         app.launchArguments = ["--ui-testing", "-UITEST_FAKE_CHAT", "1"]
         app.launch()
 
-        let marker = app.staticTexts["chatSelectedBackendMarker"]
-        XCTAssertTrue(marker.waitForExistence(timeout: 3))
-        XCTAssertEqual(marker.label, "claude",
-                       "expected persisted backend to be claude after relaunch")
+        let markerAfter = app.staticTexts["chatSelectedBackendMarker"]
+        XCTAssertTrue(markerAfter.waitForExistence(timeout: 5))
+        XCTAssertEqual(markerAfter.label, "gemma",
+                       "expected persisted backend to still be gemma after relaunch")
     }
 }
