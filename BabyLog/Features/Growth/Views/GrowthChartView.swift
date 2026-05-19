@@ -1,6 +1,6 @@
 import SwiftUI
 import Charts
-import LittleECore
+import BabyLogCore
 
 enum GrowthMetric: String, CaseIterable, Identifiable {
     case weight, height, head

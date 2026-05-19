@@ -1,5 +1,5 @@
 import SwiftUI
-import LittleECore
+import BabyLogCore
 
 struct FeedTodayLogSection: View {
 

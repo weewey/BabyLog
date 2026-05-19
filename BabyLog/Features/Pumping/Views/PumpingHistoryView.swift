@@ -1,6 +1,6 @@
 import SwiftUI
 import Charts
-import LittleECore
+import BabyLogCore
 
 /// Push-nav screen reached from the Pumping tab's "View history" row.
 ///

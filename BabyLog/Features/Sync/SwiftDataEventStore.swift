@@ -1,7 +1,7 @@
 import Foundation
 import OSLog
 import SwiftData
-import LittleECore
+import BabyLogCore
 
 private let eventStoreLog = Logger(subsystem: "com.babylog.app", category: "SwiftDataEventStore")
 

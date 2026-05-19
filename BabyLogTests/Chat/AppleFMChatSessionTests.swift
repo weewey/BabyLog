@@ -1,5 +1,5 @@
 import XCTest
-import LittleECore
+import BabyLogCore
 @testable import BabyLog
 
 /// Tests the Apple FM `ChatSession` adapter layer without invoking the

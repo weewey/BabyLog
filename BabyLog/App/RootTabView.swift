@@ -1,7 +1,7 @@
 import SwiftUI
 import SwiftData
 import UIKit
-import LittleECore
+import BabyLogCore
 
 struct RootTabView: View {
 

@@ -1,8 +1,8 @@
 import Foundation
 import SwiftData
-import LittleECore
+import BabyLogCore
 
-/// SwiftData persistence model mirroring `LittleECore.DomainEvent`.
+/// SwiftData persistence model mirroring `BabyLogCore.DomainEvent`.
 ///
 /// The event log is append-only, so this table grows monotonically. No
 /// relationships — every row is self-contained so idempotent append +

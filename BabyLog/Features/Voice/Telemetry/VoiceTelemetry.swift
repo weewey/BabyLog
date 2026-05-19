@@ -1,5 +1,5 @@
 import Foundation
-import LittleECore
+import BabyLogCore
 
 /// In-memory rolling log of voice capture events. Local only, never shipped
 /// off-device. Surfaced via the debug pane in Settings (gated behind a toggle).

@@ -1,5 +1,5 @@
 import Foundation
-import LittleECore
+import BabyLogCore
 
 /// Orchestrates a background sync → feed check → reminder reschedule cycle.
 ///

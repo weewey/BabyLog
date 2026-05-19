@@ -1,5 +1,5 @@
 import SwiftUI
-import LittleECore
+import BabyLogCore
 
 /// Compact status pill for the Settings screen. Pure projection of a
 /// `SyncStatus` — all copy comes from `SyncStatus.pillLabel(...)` in Core.

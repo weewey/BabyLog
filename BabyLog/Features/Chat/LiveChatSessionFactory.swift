@@ -1,5 +1,5 @@
 import Foundation
-import LittleECore
+import BabyLogCore
 
 /// Production `ChatSessionFactory` that returns real backend adapters.
 ///

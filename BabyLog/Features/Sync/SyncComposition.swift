@@ -1,6 +1,6 @@
 import Foundation
 import SwiftData
-import LittleECore
+import BabyLogCore
 
 /// App-wide sync wiring built once per `RootTabView` lifecycle.
 ///

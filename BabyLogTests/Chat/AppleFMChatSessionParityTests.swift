@@ -1,12 +1,12 @@
 import XCTest
-import LittleECore
+import BabyLogCore
 @testable import BabyLog
 
 /// Drives the shared `ChatSession` parity contract against
 /// `AppleFMChatSession`. The harness lives in the Core test target
-/// (`LittleECoreTests/Voice/ChatSessionParityHarness.swift`); this file
+/// (`BabyLogCoreTests/Voice/ChatSessionParityHarness.swift`); this file
 /// re-implements the same invariants here because the iOS test target
-/// cannot import `@testable LittleECoreTests`. Keep the assertions in
+/// cannot import `@testable BabyLogCoreTests`. Keep the assertions in
 /// lock-step with `ChatSessionParityHarness` — if you change one, change
 /// both.
 ///

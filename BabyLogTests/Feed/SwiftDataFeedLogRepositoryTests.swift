@@ -1,7 +1,7 @@
 import XCTest
 import SwiftData
 @testable import BabyLog
-import LittleECore
+import BabyLogCore
 
 /// Tests for `SwiftDataFeedLogRepository`.
 ///

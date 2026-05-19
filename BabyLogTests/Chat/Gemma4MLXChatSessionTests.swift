@@ -1,5 +1,5 @@
 import XCTest
-import LittleECore
+import BabyLogCore
 @testable import BabyLog
 
 /// Pure-logic tests for the Gemma 4 backend. Covers the two bug-prone

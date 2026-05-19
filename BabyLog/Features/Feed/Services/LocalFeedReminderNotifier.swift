@@ -1,6 +1,6 @@
 import Foundation
 @preconcurrency import UserNotifications
-import LittleECore
+import BabyLogCore
 
 /// iOS adapter that schedules a local notification when the gap since the
 /// most recent feed exceeds the configured threshold.

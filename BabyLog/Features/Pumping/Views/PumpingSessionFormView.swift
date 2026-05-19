@@ -1,5 +1,5 @@
 import SwiftUI
-import LittleECore
+import BabyLogCore
 
 /// Form sheet for creating or editing a `PumpingSession`.
 struct PumpingSessionFormView: View {

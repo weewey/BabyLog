@@ -1,5 +1,5 @@
 import Foundation
-import LittleECore
+import BabyLogCore
 #if canImport(FoundationModels)
 import FoundationModels
 #endif

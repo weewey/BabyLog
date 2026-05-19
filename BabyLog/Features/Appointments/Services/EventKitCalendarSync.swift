@@ -1,11 +1,11 @@
 import Foundation
 @preconcurrency import EventKit
-import LittleECore
+import BabyLogCore
 
 /// iOS adapter that mirrors `MedicalAppointment`s into the system calendar
 /// via EventKit.
 ///
-/// Events are tagged with `url = littlee://appointment/<uuid>` so we can
+/// Events are tagged with `url = babylog://appointment/<uuid>` so we can
 /// find them again without persisting EKEvent identifiers alongside the
 /// appointment model (which would require a SwiftData + CloudKit schema
 /// change).
@@ -77,6 +77,6 @@ final class EventKitCalendarSync: CalendarSyncing {
     }
 
     private static func tagURL(for id: UUID) -> URL? {
-        URL(string: "littlee://appointment/\(id.uuidString)")
+        URL(string: "babylog://appointment/\(id.uuidString)")
     }
 }

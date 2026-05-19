@@ -1,6 +1,6 @@
 import Foundation
 import Observation
-import LittleECore
+import BabyLogCore
 
 @Observable
 final class MilestoneViewModel {

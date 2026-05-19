@@ -1,5 +1,5 @@
 import SwiftUI
-import LittleECore
+import BabyLogCore
 
 /// Feed-tab analytics. A single compact card with night vs day split,
 /// inline night-cluster badge and longest-stretch line, peak-hour pills,

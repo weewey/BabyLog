@@ -1,6 +1,6 @@
 import Foundation
 import Observation
-import LittleECore
+import BabyLogCore
 
 /// Loads and holds the snapshot the chat empty-state shell renders.
 /// Reads from feed + diaper repos and the child profile store; all

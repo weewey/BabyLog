@@ -1,6 +1,6 @@
 import SwiftUI
 import SwiftData
-import LittleECore
+import BabyLogCore
 
 // MARK: - App entry point
 

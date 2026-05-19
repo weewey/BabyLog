@@ -1,6 +1,6 @@
 import Foundation
 import SwiftData
-import LittleECore
+import BabyLogCore
 
 /// Concrete `FeedLogRepository` backed by SwiftData + CloudKit.
 ///

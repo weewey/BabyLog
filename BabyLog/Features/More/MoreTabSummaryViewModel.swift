@@ -1,6 +1,6 @@
 import Foundation
 import Observation
-import LittleECore
+import BabyLogCore
 
 /// Loads the compact "Today at a glance" snapshot shown at the top of the
 /// More tab. Reuses `ChatEmptyStateSummary` so all derivation stays in

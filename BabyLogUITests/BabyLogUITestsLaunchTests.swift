@@ -1,6 +1,6 @@
 //
 //  BabyLogUITestsLaunchTests.swift
-//  LittleEUITests
+//  BabyLogUITests
 //
 //  Created by Yew Wee Chua on 11/4/26.
 //

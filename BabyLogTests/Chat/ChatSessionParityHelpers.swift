@@ -1,5 +1,5 @@
 import XCTest
-import LittleECore
+import BabyLogCore
 @testable import BabyLog
 
 /// iOS-test-target mirror of `ChatSessionParityHarness` (which lives in
@@ -7,7 +7,7 @@ import LittleECore
 /// helper sets in lock-step — any new invariant added to one must be
 /// added to the other, otherwise the parity guarantee weakens silently.
 ///
-/// See `LittleECore/Tests/LittleECoreTests/Voice/ChatSessionParityHarness.swift`
+/// See `BabyLogCore/Tests/BabyLogCoreTests/Voice/ChatSessionParityHarness.swift`
 /// for the canonical doc-comment list of invariants.
 enum ChatSessionParityHelpers {
 

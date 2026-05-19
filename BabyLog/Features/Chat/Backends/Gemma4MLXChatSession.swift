@@ -1,5 +1,5 @@
 import Foundation
-import LittleECore
+import BabyLogCore
 import MLXLMCommon
 
 /// Typed errors surfaced by the Gemma 4 on-device backend. Kept narrow so
@@ -29,7 +29,7 @@ enum Gemma4MLXChatSessionError: Error, Equatable {
 ///   markers — especially on Gemma 4 where `ToolCallFormat.infer()` reads
 ///   the wrong `model_type`. We run a sliding-window parser over the
 ///   streamed chunks so raw tool-call markers never leak as plain text.
-final class Gemma4MLXChatSession: LittleECore.ChatSession, @unchecked Sendable {
+final class Gemma4MLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
 
     // MARK: - Shared process state
 
@@ -421,7 +421,7 @@ final class Gemma4MLXChatSession: LittleECore.ChatSession, @unchecked Sendable {
     /// Python-literal serialization for a JSON value inside a `tool_code`
     /// block. Nested objects/arrays are flattened to a JSON-ish string
     /// — our tools don't use them, so round-trip fidelity isn't required.
-    private static func renderGemmaValue(_ value: LittleECore.JSONValue) -> String {
+    private static func renderGemmaValue(_ value: BabyLogCore.JSONValue) -> String {
         switch value {
         case .null: return "None"
         case .bool(let b): return b ? "True" : "False"
@@ -923,7 +923,7 @@ struct GemmaToolCallStreamParser: Sendable {
 
         let inner = String(s[s.index(after: parenOpen)..<close])
         let pairs = splitTopLevel(inner)
-        var values: [String: LittleECore.JSONValue] = [:]
+        var values: [String: BabyLogCore.JSONValue] = [:]
         for pair in pairs {
             let trimmed = pair.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !trimmed.isEmpty else { continue }
@@ -982,7 +982,7 @@ struct GemmaToolCallStreamParser: Sendable {
 
         let inner = String(s[s.index(after: braceOpen)..<close])
         let pairs = splitTopLevel(inner)
-        var values: [String: LittleECore.JSONValue] = [:]
+        var values: [String: BabyLogCore.JSONValue] = [:]
         for pair in pairs {
             let trimmed = pair.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !trimmed.isEmpty else { continue }
@@ -1102,7 +1102,7 @@ struct GemmaToolCallStreamParser: Sendable {
         return result
     }
 
-    nonisolated private static func decodeValue(_ raw: String) -> LittleECore.JSONValue {
+    nonisolated private static func decodeValue(_ raw: String) -> BabyLogCore.JSONValue {
         if raw.hasPrefix("\""), raw.hasSuffix("\""), raw.count >= 2 {
             let inner = String(raw.dropFirst().dropLast())
             return .string(unescapeString(inner))

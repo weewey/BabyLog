@@ -1,6 +1,6 @@
 import Foundation
 import SwiftData
-import LittleECore
+import BabyLogCore
 
 @MainActor
 final class SwiftDataMilestoneRepository: MilestoneRepository {

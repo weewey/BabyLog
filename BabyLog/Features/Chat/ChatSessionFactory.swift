@@ -1,5 +1,5 @@
 import Foundation
-import LittleECore
+import BabyLogCore
 
 /// Creates a `ChatSession` for a chosen `ChatBackend`. Injected into
 /// `ChatViewModel` so production code can wire real backends (Apple FM,

@@ -1,5 +1,5 @@
 import XCTest
-import LittleECore
+import BabyLogCore
 @testable import BabyLog
 
 /// Pins the parallel tool-call flow: a single assistant turn emits

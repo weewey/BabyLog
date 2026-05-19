@@ -1,6 +1,6 @@
 import XCTest
 import UIKit
-import LittleECore
+import BabyLogCore
 @testable import BabyLog
 
 final class ChatImageProcessorTests: XCTestCase {

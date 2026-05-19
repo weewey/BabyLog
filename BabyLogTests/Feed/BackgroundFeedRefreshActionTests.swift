@@ -1,6 +1,6 @@
 import XCTest
 @testable import BabyLog
-import LittleECore
+import BabyLogCore
 
 // MARK: - Test doubles
 

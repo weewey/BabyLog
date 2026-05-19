@@ -1,10 +1,10 @@
 import XCTest
-import LittleECore
+import BabyLogCore
 import MLXLMCommon
 @testable import BabyLog
 
 /// Golden tests for the `ChatTool ↔ MLXLMCommon.ToolSpec` projection and
-/// the inbound MLX `JSONValue` → `LittleECore.JSONValue` coercion. These
+/// the inbound MLX `JSONValue` → `BabyLogCore.JSONValue` coercion. These
 /// are the two pieces Gemma 4 tool calls flow through, so they need
 /// exact-shape coverage — the upstream `GemmaFunctionParser` is sensitive
 /// to the nested `function.parameters` schema shape.
@@ -115,7 +115,7 @@ final class Gemma4ToolMappingTests: XCTestCase {
             ])
         ]
         let args = Gemma4ToolMapping.toolArguments(from: mlx)
-        let expected: LittleECore.JSONValue = .object([
+        let expected: BabyLogCore.JSONValue = .object([
             "list": .array([
                 .object(["k": .bool(true)]),
                 .object(["k": .bool(false)]),

@@ -1,5 +1,5 @@
 import SwiftUI
-import LittleECore
+import BabyLogCore
 
 /// Custom "More" tab — replaces iOS's auto-generated overflow sheet that
 /// appears when a `TabView` has more than five items. Hosts a compact

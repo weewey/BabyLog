@@ -1,8 +1,8 @@
 import Foundation
-import LittleECore
+import BabyLogCore
 import MLXLMCommon
 
-/// Bidirectional projection between `LittleECore` chat-tool types and
+/// Bidirectional projection between `BabyLogCore` chat-tool types and
 /// `mlx-swift-lm`'s `MLXLMCommon.ToolSpec` / `ToolCall` shapes. Kept in a
 /// standalone file so the mapping is independently unit-testable and
 /// `Gemma4MLXChatSession` stays focused on streaming.
@@ -54,7 +54,7 @@ nonisolated enum Gemma4ToolMapping {
     // MARK: - Inbound: MLX JSONValue args -> ToolArguments
 
     /// Convert the upstream `[String: MLXLMCommon.JSONValue]` argument blob
-    /// a tool call arrives with into a `LittleECore.ToolArguments`. The
+    /// a tool call arrives with into a `BabyLogCore.ToolArguments`. The
     /// two `JSONValue` enums are structurally identical, so this is a
     /// recursive case-by-case map.
     static func toolArguments(
@@ -64,7 +64,7 @@ nonisolated enum Gemma4ToolMapping {
         return ToolArguments(mapped)
     }
 
-    private static func convert(_ value: MLXLMCommon.JSONValue) -> LittleECore.JSONValue {
+    private static func convert(_ value: MLXLMCommon.JSONValue) -> BabyLogCore.JSONValue {
         switch value {
         case .null: return .null
         case .bool(let b): return .bool(b)

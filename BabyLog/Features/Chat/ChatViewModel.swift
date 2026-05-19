@@ -1,6 +1,6 @@
 import Foundation
 import Observation
-import LittleECore
+import BabyLogCore
 
 /// Lightweight abstraction over `UserDefaults` so tests can inject an
 /// in-memory backing store instead of the process-wide singleton.

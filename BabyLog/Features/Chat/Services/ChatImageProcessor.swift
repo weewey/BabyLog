@@ -1,6 +1,6 @@
 import Foundation
 import UIKit
-import LittleECore
+import BabyLogCore
 
 /// Errors raised by `ChatImageProcessor` when an image picked from the
 /// Photos library can't be decoded, downscaled, or re-encoded for transport

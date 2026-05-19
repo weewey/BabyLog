@@ -1,6 +1,6 @@
 import Foundation
 import SwiftData
-import LittleECore
+import BabyLogCore
 
 /// Concrete `PumpingSessionRepository` backed by SwiftData + CloudKit.
 ///

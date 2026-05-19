@@ -1,6 +1,6 @@
 import SwiftUI
 import Charts
-import LittleECore
+import BabyLogCore
 
 enum FeedTrendRange: Int, CaseIterable, Identifiable {
     case sevenDays = 7

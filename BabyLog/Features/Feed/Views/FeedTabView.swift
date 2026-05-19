@@ -1,5 +1,5 @@
 import SwiftUI
-import LittleECore
+import BabyLogCore
 
 enum FeedSection: String, CaseIterable, Identifiable {
     case today = "Today"

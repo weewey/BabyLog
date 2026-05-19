@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		4039FA282F783331B4AC625F /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = C635DF1F4945355A30BDA607 /* MLXLMCommon */; };
 		718D29D73B71A4366985E364 /* MLXLLM in Frameworks */ = {isa = PBXBuildFile; productRef = 297951FA3B0C640523A91A09 /* MLXLLM */; };
-		8379F1A52F8B280800A7A00E /* LittleECore in Frameworks */ = {isa = PBXBuildFile; productRef = 8379F1A42F8B280800A7A00E /* LittleECore */; };
+		8379F1A52F8B280800A7A00E /* BabyLogCore in Frameworks */ = {isa = PBXBuildFile; productRef = 8379F1A42F8B280800A7A00E /* BabyLogCore */; };
 		837AE001000000000000G4HF /* MLXHuggingFace in Frameworks */ = {isa = PBXBuildFile; productRef = 837AE000000000000000G4HF /* MLXHuggingFace */; };
 		B3B10000000000000000AA01 /* Tokenizers in Frameworks */ = {isa = PBXBuildFile; productRef = B2B10000000000000000AA01 /* Tokenizers */; };
 		B3B10000000000000000AA02 /* Hub in Frameworks */ = {isa = PBXBuildFile; productRef = B2B10000000000000000AA02 /* Hub */; };
@@ -62,7 +62,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8379F1A52F8B280800A7A00E /* LittleECore in Frameworks */,
+				8379F1A52F8B280800A7A00E /* BabyLogCore in Frameworks */,
 				718D29D73B71A4366985E364 /* MLXLLM in Frameworks */,
 				4039FA282F783331B4AC625F /* MLXLMCommon in Frameworks */,
 				837AE001000000000000G4HF /* MLXHuggingFace in Frameworks */,
@@ -129,7 +129,7 @@
 			);
 			name = BabyLog;
 			packageProductDependencies = (
-				8379F1A42F8B280800A7A00E /* LittleECore */,
+				8379F1A42F8B280800A7A00E /* BabyLogCore */,
 				297951FA3B0C640523A91A09 /* MLXLLM */,
 				C635DF1F4945355A30BDA607 /* MLXLMCommon */,
 				837AE000000000000000G4HF /* MLXHuggingFace */,
@@ -216,7 +216,7 @@
 			mainGroup = 8379E7D32F8B0CC500A7A00E;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				8379F1A32F8B280800A7A00E /* XCLocalSwiftPackageReference "LittleECore" */,
+				8379F1A32F8B280800A7A00E /* XCLocalSwiftPackageReference "BabyLogCore" */,
 				A5559693A57D6D7F344583D5 /* XCRemoteSwiftPackageReference "mlx-swift-lm" */,
 				B1B10000000000000000AA01 /* XCRemoteSwiftPackageReference "swift-transformers" */,
 				B1B10000000000000000AA02 /* XCRemoteSwiftPackageReference "swift-huggingface" */,
@@ -614,9 +614,9 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		8379F1A32F8B280800A7A00E /* XCLocalSwiftPackageReference "LittleECore" */ = {
+		8379F1A32F8B280800A7A00E /* XCLocalSwiftPackageReference "BabyLogCore" */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = LittleECore;
+			relativePath = BabyLogCore;
 		};
 /* End XCLocalSwiftPackageReference section */
 
@@ -653,9 +653,9 @@
 			package = A5559693A57D6D7F344583D5 /* XCRemoteSwiftPackageReference "mlx-swift-lm" */;
 			productName = MLXLLM;
 		};
-		8379F1A42F8B280800A7A00E /* LittleECore */ = {
+		8379F1A42F8B280800A7A00E /* BabyLogCore */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = LittleECore;
+			productName = BabyLogCore;
 		};
 		837AE000000000000000G4HF /* MLXHuggingFace */ = {
 			isa = XCSwiftPackageProductDependency;

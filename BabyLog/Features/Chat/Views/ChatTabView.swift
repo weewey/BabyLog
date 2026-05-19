@@ -1,6 +1,6 @@
 import SwiftUI
 import PhotosUI
-import LittleECore
+import BabyLogCore
 
 /// Chat tab root. Projects `ChatViewModel` state onto a scrollable bubble
 /// list + bottom composer + backend picker toolbar.

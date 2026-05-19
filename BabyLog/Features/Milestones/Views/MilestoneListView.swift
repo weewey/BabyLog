@@ -1,5 +1,5 @@
 import SwiftUI
-import LittleECore
+import BabyLogCore
 
 /// Renders milestone history as one or more `Section`s. Must be embedded
 /// inside a parent `List`.

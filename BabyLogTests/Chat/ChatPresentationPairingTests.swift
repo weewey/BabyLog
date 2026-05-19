@@ -1,5 +1,5 @@
 import XCTest
-import LittleECore
+import BabyLogCore
 @testable import BabyLog
 
 /// Pure-logic tests for `pairToolMessages(_:)` — the transform that folds
