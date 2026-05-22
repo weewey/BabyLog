@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   core-tests:
-    name: LittleECore (Linux)
+    name: BabyLogCore (Linux)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -24,8 +24,8 @@ jobs:
       - name: Swift version
         run: swift --version
 
-      - name: Run LittleECore tests
-        run: swift test --package-path LittleECore
+      - name: Run BabyLogCore tests
+        run: swift test --package-path BabyLogCore
 
   # UI tests disabled — self-hosted runner has simulator clone launch failures.
   # Tests pass locally (24/24). Re-enable with -parallel-testing-enabled NO
@@ -38,7 +38,7 @@ jobs:
   #     - name: Run tests
   #       run: |
   #         SIM=$(xcrun simctl list devices available --json | jq -r '.devices | to_entries[] | select(.key | contains("iOS")) | .value[] | select(.name | startswith("iPhone")) | .name' | head -1)
-  #         xcodebuild test -project LittleE.xcodeproj -scheme LittleE \
+  #         xcodebuild test -project BabyLog.xcodeproj -scheme BabyLog \
   #           -destination "platform=iOS Simulator,name=$SIM" \
   #           -parallel-testing-enabled NO \
   #           CODE_SIGNING_ALLOWED=NO 2>&1

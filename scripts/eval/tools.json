@@ -49,8 +49,7 @@
     "input_schema": {
       "type": "object",
       "properties": {
-        "type": {"type": "string", "enum": ["wet", "dirty", "both"]},
-        "loggedAt": {"type": "string"}
+        "type": {"type": "string", "enum": ["wet", "dirty", "both"]}
       },
       "required": ["type"]
     }
@@ -94,8 +93,7 @@
       "properties": {
         "weightGrams": {"type": "integer"},
         "heightCm": {"type": "number"},
-        "headCircumferenceCm": {"type": "number"},
-        "measuredAt": {"type": "string"}
+        "headCircumferenceCm": {"type": "number"}
       }
     }
   },
@@ -139,8 +137,7 @@
       "type": "object",
       "properties": {
         "title": {"type": "string"},
-        "notes": {"type": "string"},
-        "achievedAt": {"type": "string"}
+        "notes": {"type": "string"}
       },
       "required": ["title"]
     }
@@ -228,7 +225,6 @@
     "input_schema": {
       "type": "object",
       "properties": {
-        "startedAt": {"type": "string"},
         "durationMinutes": {"type": "integer"},
         "side": {"type": "string", "enum": ["left", "right", "both"]},
         "milkVolumeMl": {"type": "integer"},

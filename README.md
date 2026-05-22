@@ -1,4 +1,4 @@
-# LittleE
+# BabyLog
 
 Native iOS app to track baby Ethan — milk intake, growth, diapers, photos, medical appointments, and developmental milestones.
 
@@ -12,7 +12,7 @@ Built and maintained by a team of managed Claude agents (PM, FE, BE, Reviewer, S
 - GitHub Actions (CI + release)
 
 ## Local dev
-Open `LittleE.xcodeproj` in Xcode, pick an iPhone simulator, ⌘U to run tests.
+Open `BabyLog.xcodeproj` in Xcode, pick an iPhone simulator, ⌘U to run tests.
 
 ## CI
 - Every PR: `xcodebuild test` on macOS runner

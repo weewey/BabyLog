@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Contract for the seven managed Claude agents that build LittleE. Every agent reads `CLAUDE.md` first, then this file, then its own role file. If a rule here conflicts with `CLAUDE.md`, **`CLAUDE.md` wins**.
+Contract for the seven managed Claude agents that build BabyLog. Every agent reads `CLAUDE.md` first, then this file, then its own role file. If a rule here conflicts with `CLAUDE.md`, **`CLAUDE.md` wins**.
 
 ## The team
 
@@ -20,7 +20,7 @@ Only **PM** moves cards between Stage columns and merges PRs. All other roles pr
 
 The split is driven by **test execution speed**, not a web metaphor.
 
-- **Core** lives in a pure Swift Package (`LittleECore/`). Tests run in the agent's Linux container via `swift test` in under a second. Strict red/green/refactor TDD is practical.
+- **Core** lives in a pure Swift Package (`BabyLogCore/`). Tests run in the agent's Linux container via `swift test` in under a second. Strict red/green/refactor TDD is practical.
 - **UI** lives in the iOS app target. Tests require `xcodebuild` on macOS, which only runs on GitHub Actions (~5–7 min per run). Strict red-first TDD is too slow to be useful at that cycle time.
 
 Each builder role matches its test strategy to its feedback loop. Both produce tested code — the rigor model differs.
@@ -70,12 +70,12 @@ Backlog  →  Todo  →  In Progress  →  In Review  →  Done
 
 Tests run in two places depending on what you're testing:
 
-1. **`LittleECore` Swift Package (in-session, Linux)** — `swift test --package-path LittleECore`. Covers domain models, repositories, analytics, validation. Sub-second feedback. Core builder runs this every TDD cycle.
+1. **`BabyLogCore` Swift Package (in-session, Linux)** — `swift test --package-path BabyLogCore`. Covers domain models, repositories, analytics, validation. Sub-second feedback. Core builder runs this every TDD cycle.
 2. **GitHub Actions `macos-14` runner (via push)** — `xcodebuild test` on the iOS app target. Covers view models, SwiftData, SwiftUI, CloudKit glue. 5–7 min per run. UI builder and Tester rely on this.
 
 Agents **do not run `xcodebuild` in their own container** — it is macOS-only and the container is Linux. The workflow for UI-layer changes is: push commit → poll `gh pr checks <PR#>` → read result → iterate.
 
-**Rule: keep logic in `LittleECore` whenever possible.** If you find yourself writing a conditional, a computation, or a validation in a view or view model, stop and ask whether it belongs in Core. Reviewer enforces this with grep-based checks.
+**Rule: keep logic in `BabyLogCore` whenever possible.** If you find yourself writing a conditional, a computation, or a validation in a view or view model, stop and ask whether it belongs in Core. Reviewer enforces this with grep-based checks.
 
 ## Approval counting
 
@@ -102,7 +102,7 @@ Reviewers may also submit a GitHub review for UI, but the comment trail is autho
 
 1. **Read `CLAUDE.md` on every session start.** Rules change; don't rely on memory.
 2. **Stay in your lane.** If a card is not labeled for your role, stop and comment on the card.
-3. **Never modify off-limits files** (`CLAUDE.md`, `.agents/*`, `.github/workflows/*`, `fastlane/*`, `LittleE.xcodeproj/*` except via Xcode-managed target membership). Escalate via `needs:human`.
+3. **Never modify off-limits files** (`CLAUDE.md`, `.agents/*`, `.github/workflows/*`, `fastlane/*`, `BabyLog.xcodeproj/*` except via Xcode-managed target membership). Escalate via `needs:human`.
 4. **Test discipline matches your lane.** Core: strict red-first TDD with committed failing tests. UI: tests ship in the same commit as the code. Both: no PR without tests.
 5. **Push passing commits to `main`.** Feature branches may carry red WIP commits (e.g., Core's red-first `test:` commit). `main` must always be green.
 6. **`[agent:<role>]` prefix on every commit, comment, PR title, review.** Auditability is non-negotiable.
@@ -115,8 +115,8 @@ Reviewers may also submit a GitHub review for UI, but the comment trail is autho
 
 ## Session startup (every role)
 
-1. Clone `git@github.com:weewey/LittleE.git`
-2. `cd LittleE` (the Xcode project root)
+1. Clone `git@github.com:weewey/BabyLog.git`
+2. `cd BabyLog` (the Xcode project root)
 3. Read `CLAUDE.md` → `.agents/AGENTS.md` → `.agents/<your-role>.md`
 4. Read the assigned card in full (title, body, comments, labels, linked PR)
 5. Post a plan comment on the card: `[agent:<role>] plan: ...` (≤ 10 bullets)

@@ -48,8 +48,8 @@ struct DailyTotalCard<Trailing: View>: View {
                     .foregroundStyle(.secondary)
                     .tracking(0.5)
                 Text(primary)
-                    .font(.title2.weight(.bold))
-                    .monospacedDigit()
+                    .font(.system(size: 52, design: .serif).italic())
+                    .fontWeight(.medium)
                     .foregroundStyle(.primary)
                 if let secondary {
                     Text(secondary)
@@ -65,10 +65,6 @@ struct DailyTotalCard<Trailing: View>: View {
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(Color(.secondarySystemBackground))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .strokeBorder(accent.opacity(0.18), lineWidth: 1)
-                )
         )
         .padding(.horizontal, 16)
         .padding(.vertical, 8)

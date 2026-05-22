@@ -25,6 +25,7 @@ struct FeedTabView: View {
                         .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                         .listRowBackground(Color.clear)
                         .listRowSeparator(.hidden)
+                        .listRowSpacing(0)
                 }
 
                 Section {
@@ -142,28 +143,96 @@ struct FeedTabView: View {
     private var summaryCard: some View {
         let _ = viewModel.lastRefreshed
         let total = viewModel.totalToday
-        DailyTotalCard(
-            title: "Today",
-            primary: "\(total.volumeMl) ml",
-            secondary: cardSecondary(total: total, avg: viewModel.averageFeedInterval),
-            accent: Theme.feed,
-            accentIcon: "waterbottle.fill"
-        ) {
-            if let last = viewModel.timeSinceLastFeed {
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text("LAST")
+        let nightDay = FeedLogAnalytics.nightDaySplit(feeds: viewModel.allEntries, on: viewModel.now)
+        let totalVol = nightDay.night.volumeMl + nightDay.day.volumeMl
+        let lastEntry = viewModel.allEntries.max(by: { $0.loggedAt < $1.loggedAt })
+
+        VStack(alignment: .leading, spacing: 14) {
+            // Top: big number (left) + last feed (right)
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("TODAY")
                         .font(.caption2.weight(.bold))
                         .foregroundStyle(.secondary)
-                    Text(formatInterval(last))
-                        .font(.title3.weight(.semibold))
-                        .monospacedDigit()
+                        .tracking(0.5)
+                    HStack(alignment: .lastTextBaseline, spacing: 4) {
+                        Text("\(total.volumeMl)")
+                            .font(.system(size: 52, design: .serif).italic())
+                            .fontWeight(.medium)
+                            .foregroundStyle(Theme.feed)
+                            .monospacedDigit()
+                        Text("ml")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Theme.feed.opacity(0.85))
+                    }
+                    Text(cardSecondary(total: total, avg: viewModel.averageFeedInterval))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer(minLength: 8)
+
+                if let interval = viewModel.timeSinceLastFeed, let entry = lastEntry {
+                    VStack(alignment: .trailing, spacing: 3) {
+                        Text("LAST FEED")
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(.secondary)
+                            .tracking(0.5)
+                        (Text(formatInterval(interval))
+                            .font(.system(size: 22, design: .serif).italic())
+                            .fontWeight(.medium)
+                         + Text(" ago")
+                            .font(.caption)
+                            .foregroundStyle(.secondary))
+                        .foregroundStyle(.primary)
+                        Text("\(Self.feedTimeFormatter.string(from: entry.loggedAt)) · \(entry.volumeMl) ml")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+
+            // Night / day split bar
+            if totalVol > 0 {
+                VStack(spacing: 6) {
+                    GeometryReader { proxy in
+                        let nightRatio = CGFloat(nightDay.night.volumeMl) / CGFloat(totalVol)
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(Theme.feed)
+                            Capsule()
+                                .fill(Color(red: 0.38, green: 0.59, blue: 0.81))
+                                .frame(width: max(0, proxy.size.width * nightRatio))
+                        }
+                    }
+                    .frame(height: 6)
+                    HStack {
+                        Text("Night · \(nightDay.night.volumeMl) ml")
+                        Spacer()
+                        Text("Day · \(nightDay.day.volumeMl) ml")
+                    }
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
                 }
             }
         }
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(Color(.secondarySystemBackground))
+        )
         .accessibilityIdentifier("feedDailyTotal")
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityLabel(total: total, last: viewModel.timeSinceLastFeed))
     }
+
+    private static let feedTimeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .none
+        f.timeStyle = .short
+        f.amSymbol = "am"
+        f.pmSymbol = "pm"
+        return f
+    }()
 
     private func formatInterval(_ seconds: TimeInterval) -> String {
         let total = Int(seconds)

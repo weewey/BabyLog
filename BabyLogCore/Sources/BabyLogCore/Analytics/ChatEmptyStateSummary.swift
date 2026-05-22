@@ -20,6 +20,8 @@ public struct ChatEmptyStateSummary: Sendable, Equatable {
     public let isLastFeedStale: Bool
     /// Context-aware chip list, already ordered for display.
     public let suggestions: [ChatSuggestion]
+    /// ml logged per hour of today (24 elements, index = hour 0–23).
+    public let todayFeedsByHour: [Int]
 
     public static let staleFeedThreshold: TimeInterval = 4 * 3600
 
@@ -29,7 +31,8 @@ public struct ChatEmptyStateSummary: Sendable, Equatable {
         todayFeedVolumeMl: Int,
         todayDiaperCount: Int,
         isLastFeedStale: Bool,
-        suggestions: [ChatSuggestion]
+        suggestions: [ChatSuggestion],
+        todayFeedsByHour: [Int] = Array(repeating: 0, count: 24)
     ) {
         self.lastFeed = lastFeed
         self.todayFeedCount = todayFeedCount
@@ -37,6 +40,7 @@ public struct ChatEmptyStateSummary: Sendable, Equatable {
         self.todayDiaperCount = todayDiaperCount
         self.isLastFeedStale = isLastFeedStale
         self.suggestions = suggestions
+        self.todayFeedsByHour = todayFeedsByHour.count == 24 ? todayFeedsByHour : Array(repeating: 0, count: 24)
     }
 
     public static func summarize(
@@ -56,6 +60,11 @@ public struct ChatEmptyStateSummary: Sendable, Equatable {
         }
 
         let todayVolume = todayFeeds.reduce(0) { $0 + $1.volumeMl }
+        var hourly = Array(repeating: 0, count: 24)
+        for feed in todayFeeds {
+            let h = calendar.component(.hour, from: feed.loggedAt)
+            if (0..<24).contains(h) { hourly[h] += feed.volumeMl }
+        }
         let stale = last.map { now.timeIntervalSince($0.loggedAt) >= staleFeedThreshold } ?? false
         let suggestions = defaultSuggestions(
             now: now,
@@ -70,7 +79,8 @@ public struct ChatEmptyStateSummary: Sendable, Equatable {
             todayFeedVolumeMl: todayVolume,
             todayDiaperCount: diapersEnabled ? todayDiapers.count : 0,
             isLastFeedStale: stale,
-            suggestions: suggestions
+            suggestions: suggestions,
+            todayFeedsByHour: hourly
         )
     }
 

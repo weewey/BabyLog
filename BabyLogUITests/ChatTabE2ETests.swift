@@ -15,9 +15,9 @@ final class ChatTabE2ETests: XCTestCase {
     // MARK: - Default tab
 
     func test_launch_chatTabIsDefaultSelection() throws {
-        let chatTabButton = app.tabBars.buttons["Chat"]
+        let chatTabButton = app.tabBars.buttons["Assistant"]
         XCTAssertTrue(chatTabButton.waitForExistence(timeout: 3))
-        XCTAssertTrue(chatTabButton.isSelected, "Chat should be the default selected tab")
+        XCTAssertTrue(chatTabButton.isSelected, "Assistant should be the default selected tab")
         XCTAssertTrue(app.otherElements["chatTabRoot"].exists
                       || app.textFields["chatInputField"].waitForExistence(timeout: 2))
     }

@@ -28,13 +28,15 @@ struct PumpingHomeView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
-                    PumpingHeroCard(summary: viewModel.summary, template: viewModel.template)
-
-                    PumpingProgressBar(ratio: viewModel.summary.completionRatio)
-                        .padding(.horizontal, 16)
-
-                    PumpingTipCard(tip: viewModel.tipOfDay)
-                        .padding(.horizontal, 16)
+                    PumpingTimerCard(
+                        summary: viewModel.summary,
+                        template: viewModel.template,
+                        lastSession: viewModel.todaysSessions.sorted { $0.startedAt > $1.startedAt }.first
+                    ) {
+                        viewModel.resetDraft()
+                        editingSession = nil
+                        showForm = true
+                    }
 
                     Picker("View", selection: $selectedSegment) {
                         ForEach(Segment.allCases) { segment in
@@ -109,7 +111,7 @@ struct PumpingHomeView: View {
                     } label: {
                         Image(systemName: "plus")
                     }
-                    .tint(.pink)
+                    .tint(Theme.pumping)
                     .accessibilityIdentifier("pumpingAddButton")
                     .accessibilityLabel("Add pumping session")
                     .accessibilityHint("Opens form to log a new pumping session")
@@ -138,7 +140,7 @@ struct PumpingHomeView: View {
                         }
                     }
                 }
-                .tint(.pink)
+                .tint(Theme.pumping)
             }
             .refreshable {
                 await onSync?()
@@ -147,104 +149,106 @@ struct PumpingHomeView: View {
             .task { await viewModel.load() }
             .accessibilityIdentifier("pumpingTabRoot")
         }
-        .tint(.pink)
+        .tint(Theme.pumping)
     }
 }
 
-// MARK: - Hero card
+// MARK: - Timer hero card
 
-private struct PumpingHeroCard: View {
+private struct PumpingTimerCard: View {
     let summary: PumpingAnalytics
     let template: PumpingScheduleTemplate
+    let lastSession: PumpingSession?
+    var onLogSession: () -> Void
+
+    init(summary: PumpingAnalytics, template: PumpingScheduleTemplate,
+         lastSession: PumpingSession?, onLogSession: @escaping () -> Void) {
+        self.summary = summary
+        self.template = template
+        self.lastSession = lastSession
+        self.onLogSession = onLogSession
+    }
+
+    private static let ringSize: CGFloat = 164
 
     var body: some View {
-        let percent = Int((summary.completionRatio * 100).rounded())
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Pumping session \(summary.sessionsLoggedToday) of \(template.slots.count)")
-                        .font(.headline)
-                        .foregroundStyle(.white)
-                    Text("\(summary.totalVolumeMlToday) ml today")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.white.opacity(0.95))
-                        .monospacedDigit()
+        let sessionCount = summary.sessionsLoggedToday
+        let totalSlots = max(template.slots.count, 1)
+        let ratio = min(Double(sessionCount) / Double(totalSlots), 1.0)
+
+        VStack(spacing: 18) {
+            Text("\(sessionCount) of \(totalSlots) sessions")
+                .font(.caption.weight(.semibold))
+                .textCase(.uppercase)
+                .tracking(0.5)
+                .foregroundStyle(Theme.pumping)
+
+            // Progress ring with total ml in center
+            ZStack {
+                Circle()
+                    .stroke(Theme.pumping.opacity(0.15), lineWidth: 6)
+                    .frame(width: Self.ringSize, height: Self.ringSize)
+
+                if ratio > 0 {
+                    Circle()
+                        .trim(from: 0, to: ratio)
+                        .stroke(Theme.pumping, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                        .frame(width: Self.ringSize, height: Self.ringSize)
+                        .rotationEffect(.degrees(-90))
                 }
-                Spacer(minLength: 8)
-                Text("\(percent)%")
-                    .font(.system(size: 44, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
-                    .monospacedDigit()
+
+                VStack(spacing: 2) {
+                    Text("\(summary.totalVolumeMlToday)")
+                        .font(.system(size: 44, design: .serif).italic())
+                        .fontWeight(.medium)
+                        .foregroundStyle(.primary)
+                        .monospacedDigit()
+                    Text("ml today")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            // Log session button
+            Button(action: onLogSession) {
+                HStack(spacing: 8) {
+                    Image(systemName: "plus")
+                        .font(.subheadline.weight(.semibold))
+                    Text("Log session")
+                        .font(.headline)
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 36)
+                .padding(.vertical, 14)
+                .background(Theme.pumping, in: Capsule())
+                .shadow(color: Theme.pumping.opacity(0.35), radius: 8, y: 4)
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("pumpingAddButton")
+            .accessibilityLabel("Log pumping session")
+            .accessibilityHint("Opens form to log a new pumping session")
+
+            // Last session info
+            if let last = lastSession {
+                let ago = RelativeTime.shortLabel(for: last.startedAt)
+                let detail = last.milkVolumeMl.map { " · \($0) ml" } ?? ""
+                Text("Last session \(ago) · \(last.durationMinutes) min\(detail)")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
             }
         }
-        .padding(20)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 28)
+        .frame(maxWidth: .infinity)
         .background(
-            LinearGradient(
-                colors: [
-                    Color(red: 0.98, green: 0.52, blue: 0.70),
-                    Color(red: 0.96, green: 0.38, blue: 0.52),
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            ),
-            in: RoundedRectangle(cornerRadius: 22, style: .continuous)
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .fill(Color(.secondarySystemBackground))
         )
         .padding(.horizontal, 16)
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("pumpingHeroCard")
-        .accessibilityLabel("Pumping: \(summary.sessionsLoggedToday) of \(template.slots.count) sessions done, \(summary.totalVolumeMlToday) millilitres today, \(percent) percent complete")
-    }
-}
-
-// MARK: - Progress bar
-
-private struct PumpingProgressBar: View {
-    let ratio: Double
-
-    var body: some View {
-        ProgressView(value: max(0, min(ratio, 1)))
-            .progressViewStyle(.linear)
-            .tint(.pink)
-            .accessibilityIdentifier("pumpingProgressBar")
-            .accessibilityLabel("Daily completion")
-            .accessibilityValue("\(Int((ratio * 100).rounded())) percent")
-    }
-}
-
-// MARK: - Tip callout
-
-private struct PumpingTipCard: View {
-    let tip: String
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: "lightbulb.fill")
-                .foregroundStyle(.pink)
-                .font(.title3)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Tip")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(.pink)
-                Text(tip)
-                    .font(.subheadline)
-                    .foregroundStyle(.primary)
-            }
-            Spacer(minLength: 0)
-        }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color.pink.opacity(0.10))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(Color.pink.opacity(0.25), lineWidth: 1)
-        )
-        .accessibilityElement(children: .combine)
-        .accessibilityIdentifier("pumpingTipCard")
-        .accessibilityLabel("Tip of the day: \(tip)")
+        .accessibilityLabel("Pumping: \(sessionCount) of \(totalSlots) sessions, \(summary.totalVolumeMlToday) millilitres today")
     }
 }
 

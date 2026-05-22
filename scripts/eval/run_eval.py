@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-System-prompt eval harness for LittleE's chat backends.
+System-prompt eval harness for BabyLog's chat backends.
 
 Runs a labeled dataset through the Anthropic Messages API using a chosen
 system prompt + the chat tool definitions, then scores each turn on:
@@ -34,8 +34,8 @@ from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-CLAUDE_SRC = REPO_ROOT / "LittleE/Features/Chat/Backends/ClaudeChatSession.swift"
-GEMMA_SRC = REPO_ROOT / "LittleE/Features/Chat/Backends/Gemma4MLXChatSession.swift"
+CLAUDE_SRC = REPO_ROOT / "BabyLog/Features/Chat/Backends/ClaudeChatSession.swift"
+GEMMA_SRC = REPO_ROOT / "BabyLog/Features/Chat/Backends/Gemma4MLXChatSession.swift"
 
 SUBJECT_MODEL = "claude-opus-4-6"  # mirrors ClaudeChatSession.model exactly
 JUDGE_MODEL = "claude-opus-4-6"    # user picked Opus for tone judging

@@ -4,7 +4,7 @@ This file is loaded by every Claude agent (managed or local) that works on this 
 
 ## Project
 
-**LittleE** — native iOS app to track baby Ethan. Users: two humans (the owner and his wife). Built autonomously by a team of seven managed Claude agents (see `.agents/`).
+**BabyLog** — native iOS app to track baby Ethan. Users: two humans (the owner and his wife). Built autonomously by a team of seven managed Claude agents (see `.agents/`).
 
 Tracked domains: milk intake, growth, diapers, photos, medical appointments, developmental milestones, cluster-feed analytics.
 
@@ -16,7 +16,7 @@ Default to **deciding and executing**, not asking. The owner's time is the scarc
 - Architecture choices that shape the codebase long-term (module boundaries, data model, persistence/sync strategy, framework selection)
 - Risky / hard-to-reverse actions (force push, history rewrites, secrets handling, delete/drop operations, production deploys, credential rotation, anything touching CloudKit schema)
 - Cost or external commitments (paid services, third-party dependencies, new accounts)
-- Off-limits files (`CLAUDE.md`, `.agents/*`, `.github/workflows/*`, `fastlane/*`, `LittleE.xcodeproj/*`, `.secrets/*`)
+- Off-limits files (`CLAUDE.md`, `.agents/*`, `.github/workflows/*`, `fastlane/*`, `BabyLog.xcodeproj/*`, `.secrets/*`)
 - Scope expansions beyond the current task
 
 **Decide and execute autonomously** for everything else: file layout within an existing module, language/tooling details, test structure, refactors that don't cross module boundaries, dependency versions, script mechanics, local tooling. This includes committing, pushing, dispatching agents, creating cards, running the orchestrator, and any other low-risk reversible action. Don't pause to ask "want me to continue?" — just continue.
@@ -44,12 +44,12 @@ The autonomous build pipeline is being stood up incrementally. Agents reading th
 
 ### ✅ Done
 
-- **Repo**: `weewey/LittleE` private, `main` branch, local working copy at `/Users/yewwee/localdev/LittleE/LittleE`, all commits pushed to origin
-- **Xcode skeleton**: `LittleE.xcodeproj` + `LittleE/`, `LittleETests/`, `LittleEUITests/` (default SwiftUI app template)
+- **Repo**: `weewey/BabyLog` private, `main` branch, local working copy at `/Users/yewwee/localdev/BabyLog/BabyLog`, all commits pushed to origin
+- **Xcode skeleton**: `BabyLog.xcodeproj` + `BabyLog/`, `BabyLogTests/`, `BabyLogUITests/` (default SwiftUI app template)
 - **Fastlane**: `fastlane/Fastfile` with `test` + `beta` lanes, `Gemfile` with `gem "fastlane"`
-- **CI**: `.github/workflows/ci.yml` — `core-tests` job (ubuntu, `swift test --package-path LittleECore`, ~30s) + `test` job (macos-14, `xcodebuild test` on iPhone 16 simulator)
+- **CI**: `.github/workflows/ci.yml` — `core-tests` job (ubuntu, `swift test --package-path BabyLogCore`, ~30s) + `test` job (macos-14, `xcodebuild test` on iPhone 16 simulator)
 - **TestFlight pipeline**: `.github/workflows/testflight.yml` (Fastlane beta on merge to main) — NOT yet smoke-tested end-to-end (fails on every push so far, expected until ASC API key is wired up)
-- **`LittleECore` Swift Package**: created, Swift 6 mode, iOS 26 / macOS 26 platforms, `Clock` / `SystemClock` / `TestClock` primitive in place with 4 passing tests (~1ms). Wired into `LittleE` app target via `XCLocalSwiftPackageReference` — see commit `f12bc77`.
+- **`BabyLogCore` Swift Package**: created, Swift 6 mode, iOS 26 / macOS 26 platforms, `Clock` / `SystemClock` / `TestClock` primitive in place with 4 passing tests (~1ms). Wired into `BabyLog` app target via `XCLocalSwiftPackageReference` — see commit `f12bc77`.
 - **Phase 1 managed agents provisioned**: PM (Opus), Core (Sonnet), Reviewer (Opus) created via `scripts/setup_agents.py` + one cloud environment. IDs persisted in `scripts/agents.json` (committed — opaque IDs are not secrets). PM smoke test green: session lifecycle end-to-end (7 events, ~3s).
 - **Orchestrator iteration 1** (`scripts/orchestrator.py`): gathers board state via `gh`, spawns PM session, parses `LABEL/UNLABEL/STAGE/DISPATCH` action lines from PM's reply, applies label actions, posts tick summary to issue #2. `STAGE` and `DISPATCH` stubbed for iteration 2. First real tick landed: PM correctly labeled epic #3 `needs:human`.
 - **Autopilot smoke test**: 3 consecutive local ticks at 60s intervals, fully unattended. PM was idempotent (0 actions on ticks 2 & 3 because #3 was already escalated). Proves the loop is safe to trigger repeatedly.
@@ -77,10 +77,10 @@ The autonomous build pipeline is being stood up incrementally. Agents reading th
 - **Parallel tool_use bundling fix** (2026-04-13): `ClaudeChatSession.anthropicMessages` now re-groups `ChatViewModel`'s interleaved `.call`/`.result` tool messages into one assistant turn (all `tool_use` blocks) + one user turn (all matching `tool_result` blocks). Fixes HTTP 400 "unexpected tool_use_id in tool_result blocks" when the model emits parallel tool calls (e.g. "log a feed, a diaper, and a weight" → 3 tool_use in one assistant message).
 - **Chat suggestion chip strip + Gemma lifecycle fixes** (2026-04-14): `ChatTabView` gains an always-visible horizontal chip strip above the composer with four tappable starters (60 ml feed, dirty/wet diaper, today's feed total); write-intent chips populate the input and focus it for review, the read-only total query auto-sends. Composer `TextField` dropped from `.roundedBorder` to `.plain` inside a `tertiarySystemBackground` capsule so the tap target stays visible without a hard outline. Empty state now defers to the strip instead of duplicating a vertical prompt list. `Gemma4MLXChatSession` rewritten to fix three regressions surfaced on TestFlight: (a) `cachedContainer` + `inFlightTask` moved to static `NSLock`-guarded storage so the ModelContainer survives the fresh-session-per-turn pattern `ChatViewModel` uses — the "Loading Gemma 4…" bar now only shows on first use per launch; (b) MLX generation is serialized process-wide (new `stream()` awaits the prior task from shared state before touching the container), fixing a crash when switching Gemma→Claude mid-reply stomped Metal state; (c) added `GemmaToolCallStreamParser`, a sliding-window parser that buffers `<|tool_call>...<tool_call|>` markers out of the chunk stream, parses `call:NAME{k:v}` bodies with `<|"|>` string quoting + nested depth tracking, and emits them as real `.toolCall` deltas — raw tool-call text no longer leaks as assistant bubbles when `GemmaFunctionParser` misses Gemma 4's `model_type`. Commits `602cb87`, `79d47f5`.
 - **Gemma reliability + TestFlight update prompt + feed add simplification** (2026-04-14): `LiveGemma4ModelLoader` now builds a custom `HubClient(session:)` with 600s/3600s timeouts + `waitsForConnectivity` to survive large shard fetches (`4aa4cbc`), and pre-sets `configuration.toolCallFormat = .gemma` so `GemmaFunctionParser` wires up correctly (`ToolCallFormat.infer()` exact-matches `"gemma"` and misses Gemma 4's `"gemma4_text"`) — raw `<|tool_call>` tokens no longer leak as plain text. `Gemma4MLXChatSession.splitHistory` now injects `ClaudeChatSession.systemPrompt(today:)` at index 0 and projects prior tool calls as `call:NAME{k:v}` assistant turns so multi-turn context rehydrates (`fdb6804`). New launch-time `UpdateChecker` reads `release/latest-build.json` from `weewey/littlee-sync` via GitHub Contents API and, when the manifest build > `CFBundleVersion`, `RootTabView` shows an "Update available" alert that deep-links to `itms-beta://` (`7414a10`). `FeedLogFormView` drops the bottle/breast picker and `CreateFeedLogTool`/`UpdateFeedLogTool` schemas no longer expose `source` — defaults to `.bottle` on create, preserves existing on update (`3d26b9a`).
-- **Qwen 2.5 llama.cpp chat backend scaffold** (2026-04-15): new `.qwen` case on `ChatBackend`, `QwenLlamaCppChatSession` + `LiveQwenModelLoader` wired through `LiveChatSessionFactory` behind `#if canImport(llama)`, plus `QwenToolCallStreamParser` (pure-Swift streaming parser for Qwen's native `<tool_call>` XML envelopes — handles parallel calls, partial-chunk buffering, malformed JSON recovery, 10 tests). Session throws `.llamaDependencyMissing` until the human owner adds the llama.cpp SPM dep to `LittleE.xcodeproj`; picker now shows Claude / Gemma / Qwen.
+- **Qwen 2.5 llama.cpp chat backend scaffold** (2026-04-15): new `.qwen` case on `ChatBackend`, `QwenLlamaCppChatSession` + `LiveQwenModelLoader` wired through `LiveChatSessionFactory` behind `#if canImport(llama)`, plus `QwenToolCallStreamParser` (pure-Swift streaming parser for Qwen's native `<tool_call>` XML envelopes — handles parallel calls, partial-chunk buffering, malformed JSON recovery, 10 tests). Session throws `.llamaDependencyMissing` until the human owner adds the llama.cpp SPM dep to `BabyLog.xcodeproj`; picker now shows Claude / Gemma / Qwen.
 - **Growth analytics-first migration** (2026-04-14): new `GrowthAnalytics.summary` (latest weight/height/head + 7–30d weight delta, 7 Linux tests) + `GrowthMeasurementViewModel.summary` passthrough; `GrowthTabView` rewritten onto `LoggingTabScaffold` and now delegates charting to existing `GrowthChartView` instead of duplicating it inline. Summary card shows e.g. "8.20 kg · +120 g this week". All `GrowthUITests` green.
 - **Feeds night/day analytics redesign** (2026-04-14): replaced broken 7×24 weekday heatmap with a single compact card. New Core API in `FeedLogAnalytics`: `isNightHour` (22:00–06:59 local per owner preference), `nightDaySplit`, `detectNightCluster` (≥3 night feeds, median gap ≤90min), `hourlyHeatmap` (rolling 7d), `peakHours`, `longestStretch` — 16 new Linux tests. `FeedClusterHeatmapView` now renders: header + "Night cluster" badge, NIGHT/DAY halfColumns (ml / count / %), today's longest stretch, top-3 peak-hour capsule pills, and a collapsed 24-cell hourly disclosure. Design reviewed by designer subagent (dropped daytime cluster, patronizing tip, and per-hour ml). Compact layout (~200pt collapsed) keeps history rows inside SwiftUI List's lazy-render window — fixes regression where a taller prototype broke `testLogMultipleFeeds_allAppearInList`. Full xcodebuild suite green.
-- **LittleE Assistant chat rebrand + Gemma 4 in-app download** (2026-04-13): `ClaudeChatSession.systemPromptBody` rewritten to introduce as "the LittleE Assistant" anchored on Ethan Chua (born 2026-04-07) with list-tool-before-answer rules + unit/tone guidance; `ChatTabView` empty-state greeting matches; chat keyboard Done button removed (overlapped mic/send) and tap-on-background now dismisses; `SettingsView` Chat section gains a Gemma 4 download row that calls `LiveGemma4ModelLoader.loadContainer` with inline percent + `ProgressView`; `EthanAvatar.imageset` finally staged into git so the Settings child header renders. `SettingsUITests.testLaunch_showsSettingsForm` now scrolls if the Save button is below the lazy Form window.
+- **BabyLog Assistant chat rebrand + Gemma 4 in-app download** (2026-04-13): `ClaudeChatSession.systemPromptBody` rewritten to introduce as "the BabyLog Assistant" anchored on Ethan Chua (born 2026-04-07) with list-tool-before-answer rules + unit/tone guidance; `ChatTabView` empty-state greeting matches; chat keyboard Done button removed (overlapped mic/send) and tap-on-background now dismisses; `SettingsView` Chat section gains a Gemma 4 download row that calls `LiveGemma4ModelLoader.loadContainer` with inline percent + `ProgressView`; `EthanAvatar.imageset` finally staged into git so the Settings child header renders. `SettingsUITests.testLaunch_showsSettingsForm` now scrolls if the Save button is below the lazy Form window.
 
 ### ❌ Not done (tracked in session task list)
 
@@ -101,17 +101,17 @@ The autonomous build pipeline is being stood up incrementally. Agents reading th
 
 ### 📓 Findings from bootstrap (learn from these, don't re-learn)
 
-- **Add `LittleECore` via `File → Add Package Dependencies… → Add Local…`, NOT by drag-drop.** Drag-drop creates a yellow folder group that exposes `.build/`, `Sources/`, `Tests/` as raw files. The correct result is a single `LittleECore local` node under **Package Dependencies** with the package cube icon.
+- **Add `BabyLogCore` via `File → Add Package Dependencies… → Add Local…`, NOT by drag-drop.** Drag-drop creates a yellow folder group that exposes `.build/`, `Sources/`, `Tests/` as raw files. The correct result is a single `BabyLogCore local` node under **Package Dependencies** with the package cube icon.
 - **`gh project field-edit` doesn't exist.** The built-in `Status` field can't be edited via API. That's why we use a custom `Stage` single-select field instead.
 - **Shared PAT breaks GitHub's native "N distinct reviewers" approval count.** Approvals are counted via the comment trail (`[agent:<role>] APPROVE`), not via GitHub's review system. See `.agents/AGENTS.md`.
-- **Linux `swift test` on `LittleECore` runs in <1s.** This is the fast-feedback loop Core agents TDD against. iOS tests only run on CI macos-14 (~5–7min cycle).
-- **CLAUDE.md off-limits list applies to managed agents, not the human owner's local Claude Code.** The owner can edit `.github/workflows/*.yml`, `fastlane/*`, `CLAUDE.md`, `.agents/*`, and `LittleE.xcodeproj/*`; agents cannot.
+- **Linux `swift test` on `BabyLogCore` runs in <1s.** This is the fast-feedback loop Core agents TDD against. iOS tests only run on CI macos-14 (~5–7min cycle).
+- **CLAUDE.md off-limits list applies to managed agents, not the human owner's local Claude Code.** The owner can edit `.github/workflows/*.yml`, `fastlane/*`, `CLAUDE.md`, `.agents/*`, and `BabyLog.xcodeproj/*`; agents cannot.
 
 ## Tech stack
 
 - **iOS 26+**, **Swift 6**, **SwiftUI**
-- **`LittleECore` Swift Package** — pure Swift, cross-platform, holds all domain logic. Tests run on Linux in sub-seconds. This is where the majority of TDD cycles happen.
-- **`LittleE` iOS app target** — imports `LittleECore`, adds SwiftUI views, `@Observable` view models, SwiftData `@Model` types, CloudKit sync. Tests run only on macOS via GitHub Actions.
+- **`BabyLogCore` Swift Package** — pure Swift, cross-platform, holds all domain logic. Tests run on Linux in sub-seconds. This is where the majority of TDD cycles happen.
+- **`BabyLog` iOS app target** — imports `BabyLogCore`, adds SwiftUI views, `@Observable` view models, SwiftData `@Model` types, CloudKit sync. Tests run only on macOS via GitHub Actions.
 - **SwiftData** for local persistence, **CloudKit** for two-device sync (owner ↔ wife)
 - **XCTest** for unit + UI tests
 - **Fastlane** → TestFlight for delivery
@@ -123,20 +123,20 @@ No third-party dependencies unless a PR explicitly justifies one. Prefer the sta
 
 ## Commands
 
-Run from repo root (`LittleE/`).
+Run from repo root (`BabyLog/`).
 
 ```bash
 # Run all tests on iPhone 16 simulator
 xcodebuild test \
-  -project LittleE.xcodeproj \
-  -scheme LittleE \
+  -project BabyLog.xcodeproj \
+  -scheme BabyLog \
   -destination 'platform=iOS Simulator,name=iPhone 16' \
   CODE_SIGNING_ALLOWED=NO | xcpretty
 
 # Build only
 xcodebuild build \
-  -project LittleE.xcodeproj \
-  -scheme LittleE \
+  -project BabyLog.xcodeproj \
+  -scheme BabyLog \
   -destination 'platform=iOS Simulator,name=iPhone 16' \
   CODE_SIGNING_ALLOWED=NO
 
@@ -198,38 +198,38 @@ The loop:
 ## Architecture
 
 ```
-LittleE/                              (Xcode project root)
-├── LittleECore/                      (local Swift Package — pure Swift, no iOS frameworks)
+BabyLog/                              (Xcode project root)
+├── BabyLogCore/                      (local Swift Package — pure Swift, no iOS frameworks)
 │   ├── Package.swift
-│   ├── Sources/LittleECore/
+│   ├── Sources/BabyLogCore/
 │   │   ├── Models/                   (Feed, Diaper, Growth, Milestone, typed errors)
 │   │   ├── Repositories/             (protocols + in-memory impls)
 │   │   ├── Analytics/                (cluster feed, trends, aggregations)
 │   │   ├── Validation/               (invariants at construction)
 │   │   └── Clock/                    (injected time primitives)
-│   └── Tests/LittleECoreTests/       (runs on Linux via `swift test`)
+│   └── Tests/BabyLogCoreTests/       (runs on Linux via `swift test`)
 │
-├── LittleE/                          (iOS app target — imports LittleECore)
+├── BabyLog/                          (iOS app target — imports BabyLogCore)
 │   ├── App/                          (entry point, navigation, composition)
 │   ├── Features/
 │   │   └── <Feature>/
 │   │       ├── Views/                (SwiftUI, no logic, projects VM state)
-│   │       ├── ViewModels/           (@Observable, thin over LittleECore services)
+│   │       ├── ViewModels/           (@Observable, thin over BabyLogCore services)
 │   │       └── Persistence/          (SwiftData @Model + CloudKit adapters)
 │   └── DesignSystem/                 (reusable styled components, tokens)
 │
-├── LittleETests/                     (iOS-only tests: VMs, SwiftData round-trips)
-└── LittleEUITests/                   (XCUITest — used sparingly)
+├── BabyLogTests/                     (iOS-only tests: VMs, SwiftData round-trips)
+└── BabyLogUITests/                   (XCUITest — used sparingly)
 ```
 
 **Hard rules:**
 
-- **`LittleECore` is pure Swift.** No `import UIKit`, `SwiftUI`, `SwiftData`, `CloudKit`, or `CoreLocation` anywhere under `LittleECore/`. Reviewer enforces this with grep.
-- **Logic lives in Core.** Any conditional on domain state, any derived value, any validation — it belongs in `LittleECore`, not in a view or a view model. If you're tempted to put an `if` on a domain value in a VM, stop and move it to Core.
-- **View models are thin.** They wrap `LittleECore` services and expose `@Observable` state. They do not contain business logic.
+- **`BabyLogCore` is pure Swift.** No `import UIKit`, `SwiftUI`, `SwiftData`, `CloudKit`, or `CoreLocation` anywhere under `BabyLogCore/`. Reviewer enforces this with grep.
+- **Logic lives in Core.** Any conditional on domain state, any derived value, any validation — it belongs in `BabyLogCore`, not in a view or a view model. If you're tempted to put an `if` on a domain value in a VM, stop and move it to Core.
+- **View models are thin.** They wrap `BabyLogCore` services and expose `@Observable` state. They do not contain business logic.
 - **Views are dumb.** They project VM state into SwiftUI. No conditionals on domain state; no derived strings; no side effects in view bodies.
-- **SwiftData `@Model` classes stay in `LittleE/Features/*/Persistence/`.** They are wrapped by adapter classes that implement `LittleECore` repository protocols, translating `@Model` ↔ domain types.
-- **Features do not import each other.** Cross-feature communication goes through `LittleECore` protocols.
+- **SwiftData `@Model` classes stay in `BabyLog/Features/*/Persistence/`.** They are wrapped by adapter classes that implement `BabyLogCore` repository protocols, translating `@Model` ↔ domain types.
+- **Features do not import each other.** Cross-feature communication goes through `BabyLogCore` protocols.
 - **A feature is "done" only when**: Core types + Core tests + VM + VM tests + View + `#Preview` + accessibility + design spec implementation are all present and CI is green.
 
 ## Git & PR hygiene
@@ -250,7 +250,7 @@ These can only be changed by the human owner:
 
 - `.github/workflows/*.yml` — CI pipelines
 - `fastlane/*` — delivery config
-- `LittleE.xcodeproj/*` — project file (except target membership for new source files, which Xcode manages)
+- `BabyLog.xcodeproj/*` — project file (except target membership for new source files, which Xcode manages)
 - `.agents/*` — agent system prompts (prevents self-rewriting)
 - `CLAUDE.md` — this file, **except** the `### ✅ Done` bullet list and the `**Last updated:**` line under *Bootstrap progress*, which agents must keep current (see policy note at top of that section)
 - `.secrets/*` — doesn't live in repo, but mentioned for completeness

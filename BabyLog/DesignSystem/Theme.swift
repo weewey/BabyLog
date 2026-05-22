@@ -6,12 +6,15 @@ enum Theme {
 
     // MARK: - Per-domain accent colors
 
-    static let feed: Color       = Color(red: 0.38, green: 0.60, blue: 0.95) // soft blue
-    static let diaper: Color     = Color(red: 0.30, green: 0.72, blue: 0.78) // teal
-    static let growth: Color     = Color(red: 0.36, green: 0.74, blue: 0.50) // mint green
-    static let appointment: Color = Color(red: 0.95, green: 0.55, blue: 0.25) // warm orange
-    static let milestone: Color  = Color(red: 0.96, green: 0.78, blue: 0.28) // soft gold
-    static let settings: Color   = Color(red: 0.55, green: 0.56, blue: 0.62) // neutral gray
+    static let feed: Color        = Color(red: 0.2379, green: 0.6145, blue: 0.8088)
+    static let pumping: Color     = Color(red: 0.8810, green: 0.5297, blue: 0.5580)
+    static let growth: Color      = Color(red: 0.2619, green: 0.6634, blue: 0.4321)
+    static let milestone: Color   = Color(red: 0.8891, green: 0.6798, blue: 0.2932)
+    static let medical: Color     = Color(red: 0.5981, green: 0.4395, blue: 0.7705)
+    static let assistant: Color   = Color(red: 0.5932, green: 0.5550, blue: 0.8232)
+    static let diaper: Color      = Color(red: 0.2379, green: 0.6145, blue: 0.8088)
+    static let appointment: Color = Color(red: 0.5981, green: 0.4395, blue: 0.7705)
+    static let settings: Color    = Color(red: 0.55, green: 0.56, blue: 0.62)
 
     // MARK: - Spacing & radii
 

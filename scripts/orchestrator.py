@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-LittleE orchestrator — iteration 3.
+BabyLog orchestrator — iteration 3.
 
 Fully autonomous pipeline: PM tick → agent dispatch → branch/PR creation →
 reviewer dispatch → auto-merge → card moves to Done.
@@ -35,7 +35,7 @@ import anthropic
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SECRETS = REPO_ROOT.parent / ".secrets" / "agents.env"
 AGENTS_FILE = REPO_ROOT / "scripts" / "agents.json"
-REPO = os.environ.get("GITHUB_REPOSITORY", "weewey/LittleE")
+REPO = os.environ.get("GITHUB_REPOSITORY", "weewey/BabyLog")
 PM_LOG_ISSUE = 2
 
 PROJECT_ID = "PVT_kwHOALfRGc4BUXhq"
@@ -205,11 +205,11 @@ def build_core_prompt(card: dict) -> str:
     labels = ", ".join(card.get("labels", [])) or "(none)"
     return f"""MODE: Core Builder, sandboxed. No gh, no git, no network, no repo clone. The orchestrator owns all GitHub I/O — you only produce text.
 
-You are the LittleE Core agent. Normally you clone, run `swift test --package-path LittleECore`, TDD red/green/refactor, push, open a PR. In this session you cannot do any of that. Instead you emit file contents and the orchestrator commits + pushes them on your behalf.
+You are the BabyLog Core agent. Normally you clone, run `swift test --package-path BabyLogCore`, TDD red/green/refactor, push, open a PR. In this session you cannot do any of that. Instead you emit file contents and the orchestrator commits + pushes them on your behalf.
 
 Contract you must honour:
-- Lane: only files under `LittleECore/Sources/LittleECore/` and `LittleECore/Tests/LittleECoreTests/`. Nothing under `LittleE/`, `.agents/`, `.github/`, `LittleE.xcodeproj/`, `CLAUDE.md`, `fastlane/`.
-- ZERO iOS imports in LittleECore: no UIKit, SwiftUI, SwiftData, CloudKit, CoreLocation, Combine.
+- Lane: only files under `BabyLogCore/Sources/BabyLogCore/` and `BabyLogCore/Tests/BabyLogCoreTests/`. Nothing under `BabyLog/`, `.agents/`, `.github/`, `BabyLog.xcodeproj/`, `CLAUDE.md`, `fastlane/`.
+- ZERO iOS imports in BabyLogCore: no UIKit, SwiftUI, SwiftData, CloudKit, CoreLocation, Combine.
 - Strict TDD: for every production type, include a `<TypeName>Tests.swift` file with behaviour tests (AAA-style). Both the test and the impl must be present.
 - Domain rules: struct-first, failable/throwing init with typed errors (Swift 6 `throws(FooError)`), inject a `Clock` (never call `Date()`), `let`-by-default, no singletons, no force unwraps.
 - PR size cap: ≤400 changed lines total across all FILE blocks.
@@ -229,14 +229,14 @@ Line 1: `[agent:core] plan:` followed by ≤10 semicolon-separated bullets.
 
 Then one or more file blocks:
 
-FILE <repo-relative path starting with LittleECore/>
+FILE <repo-relative path starting with BabyLogCore/>
 <full file contents, no fences, no line numbers>
 FILE <next path>
 <full file contents>
 ...
 FILES_END
 
-Paths MUST start with `LittleECore/`. Contents are the COMPLETE file as it should exist on disk. The final line must be `FILES_END`.
+Paths MUST start with `BabyLogCore/`. Contents are the COMPLETE file as it should exist on disk. The final line must be `FILES_END`.
 
 Escalation: if you cannot do the card within your lane, reply with:
   [agent:core] plan: <why this needs to escalate>
@@ -250,10 +250,10 @@ def build_reviewer_prompt(card: dict, pr_diff: str) -> str:
     labels = ", ".join(card.get("labels", [])) or "(none)"
     return f"""MODE: Code Reviewer, sandboxed. No gh, no git, no network, no checkout. Review from the pre-fetched diff below.
 
-You are the LittleE Code Reviewer. You do not write code; you APPROVE or REQUEST_CHANGES.
+You are the BabyLog Code Reviewer. You do not write code; you APPROVE or REQUEST_CHANGES.
 
 What you review for:
-1. Architecture boundaries — LittleECore must not import UIKit/SwiftUI/SwiftData/CloudKit. Logic in Core, not views/VMs. Off-limits files untouched.
+1. Architecture boundaries — BabyLogCore must not import UIKit/SwiftUI/SwiftData/CloudKit. Logic in Core, not views/VMs. Off-limits files untouched.
 2. TDD compliance — every new production type has a corresponding *Tests.swift with behaviour tests. AAA, no Date(), no network, no filesystem.
 3. Swift correctness — no force unwraps, no try!, typed errors, @Observable not ObservableObject, let-by-default, #Preview on every new view, .accessibilityLabel on every interactive element.
 4. Simplicity and scope — diff does only what the card asks, ≤400 lines, naming describes behaviour.
@@ -303,15 +303,15 @@ def build_ui_prompt(card: dict) -> str:
     labels = ", ".join(card.get("labels", [])) or "(none)"
     return f"""MODE: UI Builder, sandboxed. No gh, no git, no network, no repo clone. The orchestrator owns all GitHub I/O — you only produce text.
 
-You are the LittleE UI agent. You build @Observable view models, SwiftData @Model types, CloudKit adapters, and SwiftUI views. In this session you cannot clone, build, or push. Instead you emit file contents and the orchestrator commits + pushes them on your behalf.
+You are the BabyLog UI agent. You build @Observable view models, SwiftData @Model types, CloudKit adapters, and SwiftUI views. In this session you cannot clone, build, or push. Instead you emit file contents and the orchestrator commits + pushes them on your behalf.
 
 Contract you must honour:
-- Lane: only files under `LittleE/Features/`, `LittleE/App/`, `LittleE/DesignSystem/`, `LittleETests/`. Nothing under `LittleECore/`, `.agents/`, `.github/`, `LittleE.xcodeproj/`, `CLAUDE.md`, `fastlane/`.
-- You import `LittleECore` and depend on its types and protocols. Do NOT re-implement or copy logic from Core.
-- No logic in views or view models: conditionals on domain state, derived values, validations, computations belong in `LittleECore`. If a Core service doesn't exist, ESCALATE.
+- Lane: only files under `BabyLog/Features/`, `BabyLog/App/`, `BabyLog/DesignSystem/`, `BabyLogTests/`. Nothing under `BabyLogCore/`, `.agents/`, `.github/`, `BabyLog.xcodeproj/`, `CLAUDE.md`, `fastlane/`.
+- You import `BabyLogCore` and depend on its types and protocols. Do NOT re-implement or copy logic from Core.
+- No logic in views or view models: conditionals on domain state, derived values, validations, computations belong in `BabyLogCore`. If a Core service doesn't exist, ESCALATE.
 - View models use `@Observable` macro (not ObservableObject + @Published).
 - SwiftData `@Model` classes: `final`, every field has a default or is Optional (CloudKit requirement).
-- Repository adapters translate `@Model` ↔ domain types, implementing `LittleECore` protocols.
+- Repository adapters translate `@Model` ↔ domain types, implementing `BabyLogCore` protocols.
 - Every new view model must have tests. Tests and implementation go together.
 - Every new view must have a `#Preview`.
 - Every interactive element needs `.accessibilityLabel` and `.accessibilityHint`.
@@ -331,14 +331,14 @@ Line 1: `[agent:ui] plan:` followed by ≤10 semicolon-separated bullets.
 
 Then one or more file blocks:
 
-FILE <repo-relative path starting with LittleE/ or LittleETests/>
+FILE <repo-relative path starting with BabyLog/ or BabyLogTests/>
 <full file contents, no fences, no line numbers>
 FILE <next path>
 <full file contents>
 ...
 FILES_END
 
-Paths MUST start with `LittleE/` or `LittleETests/`. Contents are the COMPLETE file as it should exist on disk. The final line must be `FILES_END`.
+Paths MUST start with `BabyLog/` or `BabyLogTests/`. Contents are the COMPLETE file as it should exist on disk. The final line must be `FILES_END`.
 
 Escalation: if you cannot do the card within your lane, reply with:
   [agent:ui] plan: <why this needs to escalate>
@@ -352,7 +352,7 @@ def build_designer_prompt(card: dict) -> str:
     labels = ", ".join(card.get("labels", [])) or "(none)"
     return f"""MODE: Designer, sandboxed. No gh, no git, no network, no repo clone.
 
-You are the LittleE Designer agent. You translate a UI card's acceptance criteria into a concrete, implementable design spec. You write no code, open no PRs, touch no files.
+You are the BabyLog Designer agent. You translate a UI card's acceptance criteria into a concrete, implementable design spec. You write no code, open no PRs, touch no files.
 
 Your output is a single design spec that covers:
 1. Purpose — one sentence, user outcome
@@ -392,7 +392,7 @@ def build_security_prompt(card: dict, pr_diff: str) -> str:
     labels = ", ".join(card.get("labels", [])) or "(none)"
     return f"""MODE: Security Reviewer, sandboxed. No gh, no git, no network.
 
-You are the LittleE Security Reviewer. Read the PR diff below through a security lens. LittleE stores data about a real child — feed times, diaper events, photos, medical appointments. This is health-adjacent personal data about a minor.
+You are the BabyLog Security Reviewer. Read the PR diff below through a security lens. BabyLog stores data about a real child — feed times, diaper events, photos, medical appointments. This is health-adjacent personal data about a minor.
 
 Check for:
 1. Credentials in code (github_pat_, AuthKey_, private keys, api keys)
@@ -430,7 +430,7 @@ def build_tester_prompt(card: dict, pr_diff: str) -> str:
     labels = ", ".join(card.get("labels", [])) or "(none)"
     return f"""MODE: Tester, sandboxed. No gh, no git, no network.
 
-You are the LittleE Tester agent. Verify the PR's test coverage against the card's acceptance criteria.
+You are the BabyLog Tester agent. Verify the PR's test coverage against the card's acceptance criteria.
 
 Check:
 1. Every AC bullet on the card has a corresponding test
@@ -772,7 +772,7 @@ LOCAL_CI = os.environ.get("LOCAL_CI", "1") == "1"
 
 
 def run_local_tests(pr_number: int) -> str:
-    """Run LittleECore tests locally via `swift test`. Returns 'passed' or 'failed'."""
+    """Run BabyLogCore tests locally via `swift test`. Returns 'passed' or 'failed'."""
     branch = ""
     try:
         branch = gh("pr", "view", str(pr_number), "-R", REPO,
@@ -785,7 +785,7 @@ def run_local_tests(pr_number: int) -> str:
 
     print(f"    Running local tests on {branch}…")
     result = subprocess.run(
-        ["swift", "test", "--package-path", "LittleECore"],
+        ["swift", "test", "--package-path", "BabyLogCore"],
         capture_output=True, text=True, timeout=120,
     )
     run_cmd("git", "checkout", "main")
@@ -886,9 +886,9 @@ def build_fix_prompt(role: str, card: dict, review_body: str) -> str:
     """Build a prompt for the agent to fix reviewer's must-fix items."""
     labels = ", ".join(card.get("labels", [])) or "(none)"
     if role == "core":
-        lane_rule = "Only files under `LittleECore/Sources/` and `LittleECore/Tests/`."
+        lane_rule = "Only files under `BabyLogCore/Sources/` and `BabyLogCore/Tests/`."
     elif role == "ui":
-        lane_rule = "Only files under `LittleE/Features/`, `LittleE/App/`, `LittleETests/`."
+        lane_rule = "Only files under `BabyLog/Features/`, `BabyLog/App/`, `BabyLogTests/`."
     else:
         lane_rule = "Stay within your designated lanes."
 

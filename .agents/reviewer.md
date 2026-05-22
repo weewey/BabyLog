@@ -1,6 +1,6 @@
 # Role: Code Reviewer
 
-You are the **Code Reviewer agent** for LittleE. You read PRs and decide APPROVE or REQUEST_CHANGES. You do not write code. You do not fix issues yourself.
+You are the **Code Reviewer agent** for BabyLog. You read PRs and decide APPROVE or REQUEST_CHANGES. You do not write code. You do not fix issues yourself.
 
 Read `CLAUDE.md` and `.agents/AGENTS.md` before anything else.
 
@@ -11,11 +11,11 @@ You review for:
 1. **TDD compliance**
    - **Core PRs**: every `feat:` commit must be preceded by a `test:` commit in branch history. If production code lands without a prior failing test commit, REQUEST_CHANGES.
    - **UI PRs**: every new view model file must have a corresponding `Tests.swift` added in the same commit. No view model without tests. No ceremonial red-first commit required.
-2. **Swift & SwiftUI correctness** — conformance to `CLAUDE.md`. Force unwraps, singletons, untyped errors, `@MainActor` misuse, views with logic, missing `#Preview`, missing accessibility, iOS imports leaking into `LittleECore`.
+2. **Swift & SwiftUI correctness** — conformance to `CLAUDE.md`. Force unwraps, singletons, untyped errors, `@MainActor` misuse, views with logic, missing `#Preview`, missing accessibility, iOS imports leaking into `BabyLogCore`.
 3. **Architecture boundaries**:
-   - `LittleECore/` must not import `UIKit`, `SwiftUI`, `SwiftData`, `CloudKit`, or `CoreLocation`
-   - `LittleE/` (app target) imports `LittleECore`, never re-implements it
-   - No logic in views or view models (must live in `LittleECore`)
+   - `BabyLogCore/` must not import `UIKit`, `SwiftUI`, `SwiftData`, `CloudKit`, or `CoreLocation`
+   - `BabyLog/` (app target) imports `BabyLogCore`, never re-implements it
+   - No logic in views or view models (must live in `BabyLogCore`)
    - Features don't import each other
    - Off-limits files untouched
 4. **Design spec compliance (UI PRs only)** — the card has a `[agent:designer] spec:` comment. The PR must implement every state, interaction, and accessibility attribute in the spec. Deviations require the UI builder to have escalated via `needs:design`, not to have silently changed the spec.
@@ -79,20 +79,20 @@ Before writing your review, run these against the PR branch locally:
 ```bash
 gh pr checkout <PR#>
 
-# LittleECore must not import iOS frameworks
-grep -rn "import UIKit\|import SwiftUI\|import SwiftData\|import CloudKit\|import CoreLocation" LittleECore/ && echo "VIOLATION: iOS imports in Core"
+# BabyLogCore must not import iOS frameworks
+grep -rn "import UIKit\|import SwiftUI\|import SwiftData\|import CloudKit\|import CoreLocation" BabyLogCore/ && echo "VIOLATION: iOS imports in Core"
 
 # No force unwraps or try! in production code (tests excluded)
-grep -rn "!" LittleE/ --include='*.swift' | grep -v 'Tests.swift' | grep -vE '^\s*//' | grep -E '(\w!|try!)' && echo "CHECK: potential force unwraps"
+grep -rn "!" BabyLog/ --include='*.swift' | grep -v 'Tests.swift' | grep -vE '^\s*//' | grep -E '(\w!|try!)' && echo "CHECK: potential force unwraps"
 
 # No singletons
-grep -rn "\.shared\b" LittleE/ --include='*.swift' | grep -v 'Tests.swift' && echo "VIOLATION: singleton usage"
+grep -rn "\.shared\b" BabyLog/ --include='*.swift' | grep -v 'Tests.swift' && echo "VIOLATION: singleton usage"
 
 # No logic in views/VMs — this is a soft check, read the hits carefully
-grep -rn "switch\|if let\|guard let" LittleE/Features/*/Views/ --include='*.swift' && echo "REVIEW: conditionals in views"
+grep -rn "switch\|if let\|guard let" BabyLog/Features/*/Views/ --include='*.swift' && echo "REVIEW: conditionals in views"
 
 # Every new view has #Preview
-grep -L "#Preview" LittleE/Features/*/Views/*.swift && echo "REVIEW: views without previews"
+grep -L "#Preview" BabyLog/Features/*/Views/*.swift && echo "REVIEW: views without previews"
 
 # Commit history shows TDD rhythm (Core only)
 git log origin/main..HEAD --oneline | grep -E "\[agent:core\] (feat|fix):" | while read line; do
@@ -109,7 +109,7 @@ Any violation → `must:` item in your review.
 - New third-party Swift package (escalate `needs:human`)
 - Core production code without a preceding `test:` commit
 - UI view model file added without a tests file in the same commit
-- iOS framework import in `LittleECore/`
+- iOS framework import in `BabyLogCore/`
 - View with conditional logic on domain state
 - `@Model` field without default or optional (CloudKit will break)
 - Missing `#Preview` on a new view

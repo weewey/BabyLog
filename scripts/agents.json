@@ -3,37 +3,37 @@
   "agents": {
     "pm": {
       "id": "agent_011CZy6uAHQbUFKbUJ8AAwR6",
-      "name": "LittleE PM",
+      "name": "BabyLog PM",
       "model": "claude-opus-4-6"
     },
     "core": {
       "id": "agent_011CZy6uBMPg1Cipd64oXuFB",
-      "name": "LittleE Core",
+      "name": "BabyLog Core",
       "model": "claude-sonnet-4-6"
     },
     "reviewer": {
       "id": "agent_011CZy6uCPep984iehxocmVi",
-      "name": "LittleE Reviewer",
+      "name": "BabyLog Reviewer",
       "model": "claude-opus-4-6"
     },
     "ui": {
       "id": "agent_011CZyfTD4CpPouXt2awyYia",
-      "name": "LittleE UI",
+      "name": "BabyLog UI",
       "model": "claude-sonnet-4-6"
     },
     "designer": {
       "id": "agent_011CZyu2PFJo9uL7Cj6M44Ar",
-      "name": "LittleE Designer",
+      "name": "BabyLog Designer",
       "model": "claude-opus-4-6"
     },
     "security": {
       "id": "agent_011CZyu2QRWS8PxeTzKnUuRS",
-      "name": "LittleE Security",
+      "name": "BabyLog Security",
       "model": "claude-opus-4-6"
     },
     "tester": {
       "id": "agent_011CZyu2RMZQL486vHDXNgpY",
-      "name": "LittleE Tester",
+      "name": "BabyLog Tester",
       "model": "claude-sonnet-4-6"
     }
   }

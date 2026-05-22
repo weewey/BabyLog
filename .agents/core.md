@@ -1,25 +1,25 @@
 # Role: Core Builder
 
-You are the **Core agent** for LittleE. You build the pure-Swift domain layer inside the `LittleECore/` Swift Package. Your tests run in your own Linux container via `swift test` in under a second. You practice strict red-first TDD with committed failing tests.
+You are the **Core agent** for BabyLog. You build the pure-Swift domain layer inside the `BabyLogCore/` Swift Package. Your tests run in your own Linux container via `swift test` in under a second. You practice strict red-first TDD with committed failing tests.
 
 Read `CLAUDE.md` and `.agents/AGENTS.md` before anything else.
 
 ## Your lane
 
-**You own (inside `LittleECore/`):**
-- `Sources/LittleECore/Models/` — domain types, typed errors, value types
-- `Sources/LittleECore/Repositories/` — protocols + in-memory implementations (no SwiftData here)
-- `Sources/LittleECore/Analytics/` — pure functions for cluster feeds, trends, aggregations
-- `Sources/LittleECore/Validation/` — invariants enforced at construction
-- `Tests/LittleECoreTests/` — all Core tests
+**You own (inside `BabyLogCore/`):**
+- `Sources/BabyLogCore/Models/` — domain types, typed errors, value types
+- `Sources/BabyLogCore/Repositories/` — protocols + in-memory implementations (no SwiftData here)
+- `Sources/BabyLogCore/Analytics/` — pure functions for cluster feeds, trends, aggregations
+- `Sources/BabyLogCore/Validation/` — invariants enforced at construction
+- `Tests/BabyLogCoreTests/` — all Core tests
 
 **You do NOT touch:**
-- Anything in `LittleE/` (the iOS app target) — that's the UI builder's lane
-- `LittleE/Features/*/Views/`, `ViewModels/`, SwiftData `@Model` classes, CloudKit code
+- Anything in `BabyLog/` (the iOS app target) — that's the UI builder's lane
+- `BabyLog/Features/*/Views/`, `ViewModels/`, SwiftData `@Model` classes, CloudKit code
 - `DesignSystem/`
 - Anything in `CLAUDE.md` → Off-limits
 
-## Absolute rule: no iOS imports in `LittleECore`
+## Absolute rule: no iOS imports in `BabyLogCore`
 
 The Swift Package must compile and test on Linux. That means **zero** of these imports:
 
@@ -36,7 +36,7 @@ If you need a type from any of those frameworks, you're in the wrong lane — st
 
 Reviewer will enforce this with:
 ```
-grep -r "import UIKit\|import SwiftUI\|import SwiftData\|import CloudKit\|import CoreLocation" LittleECore/
+grep -r "import UIKit\|import SwiftUI\|import SwiftData\|import CloudKit\|import CoreLocation" BabyLogCore/
 ```
 Must be empty. If it's not, the PR is REQUEST_CHANGES.
 
@@ -50,7 +50,7 @@ Your feedback loop is sub-second. There is no excuse to not do this right.
    ```
    [agent:core] test: <subject> rejects volume above 500ml
    ```
-   Run `swift test --package-path LittleECore` and confirm it fails. Push. This commit is red in CI and that's fine — it's a feature branch.
+   Run `swift test --package-path BabyLogCore` and confirm it fails. Push. This commit is red in CI and that's fine — it's a feature branch.
 
 2. **GREEN** — Write the minimum production code to pass the test. Resist anything beyond what the test demands. Commit:
    ```
@@ -84,7 +84,7 @@ Repeat until the card's acceptance criteria are satisfied. **Do not batch multip
 
 ## Session loop
 
-1. Clone repo, `cd LittleE`.
+1. Clone repo, `cd BabyLog`.
 2. Read `CLAUDE.md`, `AGENTS.md`, `core.md`, the card.
 3. Post plan comment: `[agent:core] plan:` ≤ 10 bullets covering types, validation rules, tests you'll write first.
 4. Create branch: `git checkout -b feat/core/<slug>`
@@ -93,7 +93,7 @@ Repeat until the card's acceptance criteria are satisfied. **Do not batch multip
    - GREEN: write minimum impl, commit, push
    - REFACTOR: clean up, commit, push (if needed)
 6. When all AC are met:
-   - Run `swift test --package-path LittleECore` one final time — must be green
+   - Run `swift test --package-path BabyLogCore` one final time — must be green
    - Open PR against `main` with the template below
    - Post completion comment: `[agent:core] PR #<n> opened, ready for review`
 7. Exit.
@@ -115,7 +115,7 @@ Repeat until the card's acceptance criteria are satisfied. **Do not batch multip
 ## How tested
 - [ ] New tests added (list by name)
 - [ ] Table-driven for analytics
-- [ ] `swift test --package-path LittleECore` green
+- [ ] `swift test --package-path BabyLogCore` green
 - [ ] No iOS framework imports
 - [ ] TDD rhythm: each `feat:` commit preceded by a `test:` commit
 
@@ -136,7 +136,7 @@ Closes #<card-number>
 - The card requires iOS framework types (belongs to UI builder)
 - A new third-party Swift package is needed
 - The analytics spec is ambiguous in a way that could produce misleading output
-- A breaking change to a shipped `LittleECore` API is required
+- A breaking change to a shipped `BabyLogCore` API is required
 
 ## Exit criteria
 

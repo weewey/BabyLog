@@ -27,9 +27,9 @@ def main():
     env_id = agents_data["environment_id"]
 
     new_agents = [
-        ("designer", "LittleE Designer", "claude-opus-4-6"),
-        ("security", "LittleE Security", "claude-opus-4-6"),
-        ("tester", "LittleE Tester", "claude-sonnet-4-6"),
+        ("designer", "BabyLog Designer", "claude-opus-4-6"),
+        ("security", "BabyLog Security", "claude-opus-4-6"),
+        ("tester", "BabyLog Tester", "claude-sonnet-4-6"),
     ]
 
     for role, name, model in new_agents:

@@ -22,7 +22,7 @@ OUT_FILE = REPO_ROOT / "scripts" / "agents.json"
 
 UI_SPEC = {
     "role": "ui",
-    "name": "LittleE UI",
+    "name": "BabyLog UI",
     "model": "claude-sonnet-4-6",
     "spec": "ui.md",
 }
@@ -47,7 +47,7 @@ def build_system_prompt(spec_file: str) -> str:
     role_md = (AGENTS_DIR / spec_file).read_text()
     shared = (AGENTS_DIR / "AGENTS.md").read_text()
     return (
-        "You are one of the LittleE managed agents.\n\n"
+        "You are one of the BabyLog managed agents.\n\n"
         "=== .agents/AGENTS.md (shared contract) ===\n"
         f"{shared}\n\n"
         f"=== .agents/{spec_file} (your role) ===\n"
@@ -76,7 +76,7 @@ def main() -> None:
         name=spec["name"],
         system=build_system_prompt(spec["spec"]),
         tools=[{"type": "agent_toolset_20260401"}],
-        description=f"LittleE {spec['role']} agent",
+        description=f"BabyLog {spec['role']} agent",
     )
     print(f"  agent_id = {agent.id}")
 

@@ -12,6 +12,7 @@ import BabyLogCore
 struct MoreTabView<Appointments: View, Milestones: View, Growth: View, Settings: View>: View {
 
     @Bindable var summaryViewModel: MoreTabSummaryViewModel
+    var childProfile: ChildProfile? = nil
     var onSync: (() async -> Void)?
     var onNavigateToFeeds: (() -> Void)?
     var onNavigateToDiapers: (() -> Void)?
@@ -22,60 +23,134 @@ struct MoreTabView<Appointments: View, Milestones: View, Growth: View, Settings:
     @ViewBuilder var growthDestination: () -> Growth
     @ViewBuilder var settingsDestination: () -> Settings
 
+    private var displayName: String { childProfile?.name ?? "Baby" }
+
+    private var ageString: String? {
+        guard let dob = childProfile?.dateOfBirth else { return nil }
+        return ChildAge.shortLabel(dateOfBirth: dob, now: Date()) + " old"
+    }
+
     var body: some View {
         NavigationStack {
-            List {
-                if let summary = summaryViewModel.summary {
-                    Section {
+            ScrollView {
+                VStack(spacing: 20) {
+                    if let summary = summaryViewModel.summary {
                         TodayGlanceCard(
                             summary: summary,
                             diapersEnabled: summaryViewModel.diapersEnabled,
                             onTapFeeds: onNavigateToFeeds,
                             onTapDiapers: onNavigateToDiapers
                         )
-                        .listRowBackground(Color.clear)
-                        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-                        .listRowSeparator(.hidden)
+                        .padding(.horizontal, 16)
                     }
-                }
 
-                Section {
-                    if appointmentsEnabled {
-                        NavigationLink {
-                            appointmentsDestination()
-                        } label: {
-                            Label("Appointments", systemImage: "calendar")
+                    // Profile strip
+                    HStack(spacing: 14) {
+                        Circle()
+                            .fill(LinearGradient(
+                                colors: [Theme.assistant, Theme.assistant.opacity(0.7)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ))
+                            .frame(width: 52, height: 52)
+                            .overlay(
+                                Text(String(displayName.prefix(1)))
+                                    .font(.system(size: 22, design: .serif).italic())
+                                    .fontWeight(.medium)
+                                    .foregroundStyle(.white)
+                            )
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(displayName)
+                                .font(.headline)
+                            if let age = ageString {
+                                Text(age)
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
                         }
-                        .accessibilityIdentifier("moreRowAppointments")
-                        .accessibilityHint("Opens medical appointments")
+                        Spacer()
                     }
+                    .padding(.horizontal, 16)
 
-                    NavigationLink {
-                        milestonesDestination()
-                    } label: {
-                        Label("Milestones", systemImage: "star.fill")
-                    }
-                    .accessibilityIdentifier("moreRowMilestones")
-                    .accessibilityHint("Opens developmental milestones")
+                    // 2×2 feature grid (domain features only)
+                    LazyVGrid(
+                        columns: [GridItem(.flexible()), GridItem(.flexible())],
+                        spacing: 12
+                    ) {
+                        NavigationLink { growthDestination() } label: {
+                            MoreFeatureCard(
+                                title: "Growth",
+                                icon: "chart.line.uptrend.xyaxis",
+                                tint: Theme.growth,
+                                subtitle: "Weight, height & curves"
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("moreRowGrowth")
+                        .accessibilityHint("Opens growth measurements")
 
-                    NavigationLink {
-                        growthDestination()
-                    } label: {
-                        Label("Growth", systemImage: "chart.line.uptrend.xyaxis")
-                    }
-                    .accessibilityIdentifier("moreRowGrowth")
-                    .accessibilityHint("Opens growth measurements")
+                        NavigationLink { milestonesDestination() } label: {
+                            MoreFeatureCard(
+                                title: "Milestones",
+                                icon: "star.fill",
+                                tint: Theme.milestone,
+                                subtitle: "Firsts & achievements"
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("moreRowMilestones")
+                        .accessibilityHint("Opens developmental milestones")
 
-                    NavigationLink {
-                        settingsDestination()
-                    } label: {
-                        Label("Settings", systemImage: "gearshape")
+                        if appointmentsEnabled {
+                            NavigationLink { appointmentsDestination() } label: {
+                                MoreFeatureCard(
+                                    title: "Appointments",
+                                    icon: "calendar",
+                                    tint: Theme.medical,
+                                    subtitle: "Upcoming checkups"
+                                )
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityIdentifier("moreRowAppointments")
+                            .accessibilityHint("Opens medical appointments")
+                        }
                     }
-                    .accessibilityIdentifier("moreRowSettings")
-                    .accessibilityHint("Opens app settings")
+                    .padding(.horizontal, 16)
+
+                    // Secondary list: Settings
+                    VStack(spacing: 0) {
+                        NavigationLink { settingsDestination() } label: {
+                            HStack(spacing: 14) {
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .fill(Theme.settings.opacity(0.14))
+                                    .frame(width: 32, height: 32)
+                                    .overlay(
+                                        Image(systemName: "gearshape")
+                                            .foregroundStyle(Theme.settings)
+                                            .font(.system(size: 15, weight: .semibold))
+                                    )
+                                Text("Settings")
+                                    .font(.body)
+                                    .foregroundStyle(.primary)
+                                Spacer()
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 14)
+                        .accessibilityIdentifier("moreRowSettings")
+                        .accessibilityHint("Opens app settings")
+                    }
+                    .background(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(Color(.secondarySystemBackground))
+                    )
+                    .padding(.horizontal, 16)
+
+                    Color.clear.frame(height: 24)
                 }
+                .padding(.top, 16)
             }
-            .listStyle(.insetGrouped)
             .navigationTitle("More")
             .navigationBarTitleDisplayMode(.inline)
             .accessibilityIdentifier("moreTabRoot")
@@ -85,6 +160,47 @@ struct MoreTabView<Appointments: View, Milestones: View, Growth: View, Settings:
                 await summaryViewModel.refresh()
             }
         }
+    }
+}
+
+// MARK: - Feature grid card
+
+private struct MoreFeatureCard: View {
+    let title: String
+    let icon: String
+    let tint: Color
+    var subtitle: String? = nil
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(tint.opacity(0.14))
+                .frame(width: 40, height: 40)
+                .overlay(
+                    Image(systemName: icon)
+                        .foregroundStyle(tint)
+                        .font(.system(size: 18, weight: .semibold))
+                )
+                .accessibilityHidden(true)
+            Spacer(minLength: 10)
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.primary)
+            if let subtitle {
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .padding(.top, 2)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, minHeight: 120, alignment: .topLeading)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color(.secondarySystemBackground))
+        )
+        .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-One-time bootstrap for the LittleE managed-agent team.
+One-time bootstrap for the BabyLog managed-agent team.
 
 Creates one cloud environment and the Phase-1 roster (PM, Core, Reviewer),
 wiring each agent to the full agent toolset (bash/read/write/edit/glob/grep/web_*).
@@ -27,9 +27,9 @@ AGENTS_DIR = REPO_ROOT / ".agents"
 OUT_FILE = REPO_ROOT / "scripts" / "agents.json"
 
 PHASE_1 = [
-    {"role": "pm", "name": "LittleE PM", "model": "claude-opus-4-6", "spec": "pm.md"},
-    {"role": "core", "name": "LittleE Core", "model": "claude-sonnet-4-6", "spec": "core.md"},
-    {"role": "reviewer", "name": "LittleE Reviewer", "model": "claude-opus-4-6", "spec": "reviewer.md"},
+    {"role": "pm", "name": "BabyLog PM", "model": "claude-opus-4-6", "spec": "pm.md"},
+    {"role": "core", "name": "BabyLog Core", "model": "claude-sonnet-4-6", "spec": "core.md"},
+    {"role": "reviewer", "name": "BabyLog Reviewer", "model": "claude-opus-4-6", "spec": "reviewer.md"},
 ]
 
 
@@ -52,7 +52,7 @@ def build_system_prompt(spec_file: str) -> str:
     role_md = (AGENTS_DIR / spec_file).read_text()
     shared = (AGENTS_DIR / "AGENTS.md").read_text()
     return (
-        "You are one of the LittleE managed agents.\n\n"
+        "You are one of the BabyLog managed agents.\n\n"
         "=== .agents/AGENTS.md (shared contract) ===\n"
         f"{shared}\n\n"
         f"=== .agents/{spec_file} (your role) ===\n"
@@ -73,7 +73,7 @@ def main() -> None:
     env = client.beta.environments.create(
         name="littlee-phase1",
         config={"type": "cloud"},
-        description="LittleE autonomous build pipeline — phase 1 (PM/Core/Reviewer)",
+        description="BabyLog autonomous build pipeline — phase 1 (PM/Core/Reviewer)",
     )
     print(f"  environment_id = {env.id}")
 
@@ -85,7 +85,7 @@ def main() -> None:
             name=spec["name"],
             system=build_system_prompt(spec["spec"]),
             tools=[{"type": "agent_toolset_20260401"}],
-            description=f"LittleE {spec['role']} agent",
+            description=f"BabyLog {spec['role']} agent",
         )
         print(f"  agent_id = {agent.id}")
         agents[spec["role"]] = {

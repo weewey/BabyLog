@@ -172,8 +172,9 @@ struct RootTabView: View {
             )
             .tag(Self.chatTabTag)
             .tabItem {
-                Label("Chat", systemImage: "bubble.left.and.bubble.right.fill")
+                Label("Assistant", systemImage: "sparkles.rectangle.stack")
             }
+            .tint(Theme.assistant)
             .accessibilityIdentifier("chatTab")
 
             FeedTabView(
@@ -216,7 +217,7 @@ struct RootTabView: View {
             )
             .tag(Self.pumpingTabTag)
             .tabItem {
-                Label("Pumping", systemImage: "drop.triangle.fill")
+                Label("Pumping", systemImage: "drop.circle.fill")
             }
             .accessibilityIdentifier("pumpingTab")
 
@@ -227,6 +228,7 @@ struct RootTabView: View {
                     clock: SystemClock(),
                     diapersEnabled: diapersEnabled
                 ),
+                childProfile: settingsViewModel.savedProfile,
                 onSync: {},
                 onNavigateToFeeds: { selectedTab = Self.feedTabTag },
                 onNavigateToDiapers: diapersEnabled ? { selectedTab = Self.diaperTabTag } : nil,
@@ -277,7 +279,7 @@ struct RootTabView: View {
             )
             .tag(Self.moreTabTag)
             .tabItem {
-                Label("More", systemImage: "ellipsis.circle")
+                Label("More", systemImage: "square.grid.2x2")
             }
             .accessibilityIdentifier("moreTab")
         }

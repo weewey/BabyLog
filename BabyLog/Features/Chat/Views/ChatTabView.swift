@@ -37,7 +37,7 @@ struct ChatTabView: View {
                 }
                 composer
             }
-            .navigationTitle("Chat")
+            .navigationTitle("Assistant")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { backendMenu }
             // Zero-size marker kept in the accessibility tree so UI tests can
@@ -284,19 +284,18 @@ struct ChatTabView: View {
                             inputFocused = true
                         }
                     } label: {
-                        Text(prompt.text)
-                            .font(.callout)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.9)
-                            .foregroundStyle(.primary)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 7)
-                            .background(
-                                Capsule().fill(Color(.secondarySystemBackground))
-                            )
-                            .overlay(
-                                Capsule().stroke(Color.accentColor.opacity(0.4), lineWidth: 1)
-                            )
+                        HStack(spacing: 6) {
+                            chipIcon(for: prompt.slug)
+                                .font(.footnote.weight(.medium))
+                            Text(prompt.text)
+                                .font(.footnote.weight(.medium))
+                                .lineLimit(1)
+                        }
+                        .foregroundStyle(chipTint(for: prompt.slug))
+                        .padding(.horizontal, 13)
+                        .padding(.vertical, 8)
+                        .frame(minHeight: 44)
+                        .background(.ultraThinMaterial, in: Capsule(style: .continuous))
                     }
                     .buttonStyle(.plain)
                     .disabled(viewModel.isStreaming)
@@ -314,6 +313,29 @@ struct ChatTabView: View {
             .padding(.vertical, 8)
         }
         .accessibilityIdentifier("chatSuggestionStrip")
+    }
+
+    @ViewBuilder
+    private func chipIcon(for slug: String) -> some View {
+        switch slug {
+        case "feed60", "feedTotal":
+            Image(systemName: "waterbottle.fill")
+        case "pump20":
+            Image(systemName: "drop.triangle.fill")
+        default:
+            Image(systemName: "sparkles")
+        }
+    }
+
+    private func chipTint(for slug: String) -> Color {
+        switch slug {
+        case "feed60", "feedTotal":
+            return Theme.feed
+        case "pump20":
+            return Theme.pumping
+        default:
+            return Theme.assistant
+        }
     }
 
     // MARK: - Composer
@@ -415,10 +437,6 @@ struct ChatTabView: View {
                 .textFieldStyle(.plain)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 9)
-                .background(
-                    Capsule(style: .continuous)
-                        .fill(Color(.tertiarySystemBackground))
-                )
                 .lineLimit(1...4)
                 .focused($inputFocused)
                 .submitLabel(.send)
@@ -465,6 +483,7 @@ struct ChatTabView: View {
             }
         }
         .padding(12)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 26, style: .continuous))
     }
 
     // MARK: - Backend menu
@@ -811,159 +830,115 @@ private struct EmptyChatView: View {
     }
 
     private var hero: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "figure.and.child.holdinghands")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 72, height: 72)
-                .foregroundStyle(.pink)
-                .clipShape(Circle())
-                .overlay(
-                    Circle()
-                        .strokeBorder(
-                            LinearGradient(
-                                colors: [Color.pink.opacity(0.6), Color.orange.opacity(0.5)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 3
-                        )
-                )
-                .shadow(color: .pink.opacity(0.15), radius: 8, y: 3)
-                .accessibilityHidden(true)
-
-            VStack(spacing: 2) {
-                Text(greeting)
-                    .font(.title3.weight(.semibold))
-                Text(ageLine)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
+        VStack(spacing: 2) {
+            Text(greeting + ",")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            Text("how is \(babyName) today?")
+                .font(.system(size: 32, design: .serif).italic())
+                .multilineTextAlignment(.center)
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(greeting). \(ageLine).")
     }
 
-    private var pillsStackVertically: Bool {
-        dynamicTypeSize >= .accessibility3
-    }
-
     private func statusCard(_ s: ChatEmptyStateSummary) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Button {
-                onNavigateToFeeds?()
-            } label: {
-                lastFeedRow(s)
+            // Header row: "TODAY" + on-track dot
+            HStack(spacing: 0) {
+                Text("TODAY")
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(.secondary)
+                    .tracking(0.5)
+                Spacer()
+                if s.todayFeedCount > 0 {
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(Theme.growth)
+                            .frame(width: 6, height: 6)
+                        Text("On track")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                    }
+                }
             }
-            .buttonStyle(.plain)
-            .disabled(onNavigateToFeeds == nil)
 
-            Divider().opacity(0.5)
+            // Hero number + secondary text side-by-side
+            HStack(alignment: .firstTextBaseline, spacing: 14) {
+                HStack(alignment: .lastTextBaseline, spacing: 4) {
+                    Text("\(s.todayFeedVolumeMl)")
+                        .font(.system(size: 52, design: .serif).italic())
+                        .fontWeight(.medium)
+                        .foregroundStyle(Theme.feed)
+                        .monospacedDigit()
+                    Text("ml")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Theme.feed.opacity(0.8))
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("across \(s.todayFeedCount) feed\(s.todayFeedCount == 1 ? "" : "s")")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    if let last = s.lastFeed {
+                        Text("last at \(Self.shortTimeFormatter.string(from: last.loggedAt))")
+                            .font(.caption)
+                            .foregroundStyle(s.isLastFeedStale ? Color.orange : Color.secondary.opacity(0.7))
+                    }
+                }
+            }
 
-            pillsRow(s)
+            // 24-hour mini bar chart (feed volume per hour)
+            let maxHourly = s.todayFeedsByHour.max() ?? 0
+            HStack(alignment: .bottom, spacing: 1.5) {
+                ForEach(0..<24, id: \.self) { h in
+                    let vol = s.todayFeedsByHour[h]
+                    let barH: CGFloat = maxHourly > 0 && vol > 0
+                        ? max(4, 28 * CGFloat(vol) / CGFloat(maxHourly))
+                        : 3
+                    Capsule()
+                        .fill(vol > 0 ? Theme.feed : Color(.systemFill).opacity(0.45))
+                        .frame(maxWidth: .infinity, minHeight: barH, maxHeight: barH)
+                }
+            }
+            .frame(height: 28)
+
+            // Hour labels
+            HStack {
+                Text("12 AM")
+                Spacer()
+                Text("6 AM")
+                Spacer()
+                Text("Now")
+                Spacer()
+                Text("6 PM")
+            }
+            .font(.caption2)
+            .foregroundStyle(.tertiary)
         }
-        .padding(14)
+        .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(Color(.secondarySystemBackground))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(
-                    s.isLastFeedStale ? Color.orange.opacity(0.5) : Color.pink.opacity(0.15),
-                    lineWidth: 1
-                )
         )
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("chatStatusCard")
         .accessibilityLabel(accessibilitySummary(s))
     }
 
-    @ViewBuilder
-    private func lastFeedRow(_ s: ChatEmptyStateSummary) -> some View {
-        if let last = s.lastFeed {
-            HStack(spacing: 8) {
-                Image(systemName: s.isLastFeedStale ? "clock.badge.exclamationmark" : "clock")
-                    .foregroundStyle(s.isLastFeedStale ? Color.orange : Color.secondary)
-                Text("Last feed ")
-                    .foregroundStyle(.secondary)
-                + Text(RelativeTime.shortLabel(for: last.loggedAt))
-                    .foregroundStyle(s.isLastFeedStale ? Color.orange : Color.primary)
-                    .fontWeight(.semibold)
-                + Text(" · \(last.volumeMl) ml")
-                    .foregroundStyle(.secondary)
-                Spacer(minLength: 0)
-                if onNavigateToFeeds != nil {
-                    Image(systemName: "chevron.right")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.tertiary)
-                }
-            }
-            .font(.subheadline)
-            .contentShape(Rectangle())
-        } else {
-            HStack(spacing: 8) {
-                Image(systemName: "sparkles")
-                    .foregroundStyle(.secondary)
-                Text("No feeds logged yet — tap a chip below to start")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                Spacer(minLength: 0)
-            }
-            .contentShape(Rectangle())
-        }
-    }
-
-    @ViewBuilder
-    private func pillsRow(_ s: ChatEmptyStateSummary) -> some View {
-        let feeds = StatPill(
-            icon: "waterbottle.fill",
-            tint: .pink,
-            label: "Today",
-            value: "\(s.todayFeedCount) feed\(s.todayFeedCount == 1 ? "" : "s") · \(s.todayFeedVolumeMl) ml",
-            showChevron: onNavigateToFeeds != nil,
-            action: onNavigateToFeeds
-        )
-        let showDiapers = diapersEnabled
-        if showDiapers {
-            let diapers = StatPill(
-                icon: "drop.fill",
-                tint: .cyan,
-                label: "Diapers",
-                value: "\(s.todayDiaperCount)",
-                showChevron: onNavigateToDiapers != nil,
-                action: onNavigateToDiapers
-            )
-            if pillsStackVertically {
-                VStack(spacing: 8) {
-                    feeds
-                    diapers
-                }
-            } else {
-                HStack(spacing: 14) {
-                    feeds
-                    diapers
-                }
-            }
-        } else {
-            feeds
-        }
-    }
+    private static let shortTimeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .none
+        f.timeStyle = .short
+        f.amSymbol = "am"
+        f.pmSymbol = "pm"
+        return f
+    }()
 
     private func accessibilitySummary(_ s: ChatEmptyStateSummary) -> String {
-        let showDiapers = diapersEnabled
-        var parts: [String] = []
+        var parts = ["Today: \(s.todayFeedVolumeMl) millilitres, \(s.todayFeedCount) feed\(s.todayFeedCount == 1 ? "" : "s")"]
         if let last = s.lastFeed {
-            parts.append("Last feed \(RelativeTime.shortLabel(for: last.loggedAt)), \(last.volumeMl) millilitres")
-            if s.isLastFeedStale {
-                parts.append("stale, over four hours")
-            }
-        } else {
-            parts.append("No feeds logged yet")
-        }
-        parts.append("Today, \(s.todayFeedCount) feed\(s.todayFeedCount == 1 ? "" : "s"), \(s.todayFeedVolumeMl) millilitres")
-        if showDiapers {
-            parts.append("\(s.todayDiaperCount) diaper\(s.todayDiaperCount == 1 ? "" : "s")")
+            parts.append("last feed at \(Self.shortTimeFormatter.string(from: last.loggedAt))")
+            if s.isLastFeedStale { parts.append("overdue") }
         }
         return parts.joined(separator: ". ")
     }
