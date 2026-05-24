@@ -8,12 +8,15 @@ on:
 jobs:
   beta:
     name: Upload to TestFlight
-    runs-on: [self-hosted, macOS]
+    runs-on: macos-15
     environment: testflight
-    env:
-      PATH: /opt/homebrew/opt/ruby/bin:/opt/homebrew/lib/ruby/gems/3.4.0/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin
     steps:
       - uses: actions/checkout@v5
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
 
       - name: Install dependencies
         run: bundle install --path vendor/bundle --quiet
