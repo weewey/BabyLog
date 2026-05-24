@@ -49,11 +49,62 @@ platform :ios do
 
     match(type: "appstore", readonly: is_ci) if ENV["MATCH_GIT_URL"] && !ENV["MATCH_GIT_URL"].empty?
 
+    # Write the ASC key to disk so xcodebuild can authenticate directly.
+    key_path = File.expand_path("~/.appstore/AuthKey_#{ENV["ASC_KEY_ID"]}.p8")
+    unless File.exist?(key_path)
+      require 'base64'
+      File.write(key_path, Base64.decode64(ENV["ASC_KEY_CONTENT"]))
+      File.chmod(0600, key_path)
+    end
+
+    # Regenerate the provisioning profile (picks up any new capabilities like
+    # Increased Memory Limit). skip_install: true avoids a sigh bug where the
+    # post-install step passes just the UUID to `security` instead of the full path.
+    get_provisioning_profile(
+      api_key: api_key,
+      app_identifier: ENV["APP_IDENTIFIER"],
+      provisioning_name: "com.yewwee.BabyLog AppStore",
+      force: true,
+      skip_install: true,
+      team_id: ENV["TEAM_ID"]
+    )
+
+    # sigh downloads to the working dir; grab the path from the lane context.
+    require 'open3'
+    require 'fileutils'
+    profile_path = Actions.lane_context[Actions::SharedValues::SIGH_PROFILE_PATH]
+    UI.user_error!("SIGH_PROFILE_PATH not set after get_provisioning_profile") unless profile_path
+    UI.message("Downloaded profile at: #{profile_path}")
+
+    # Extract UUID and install manually.
+    plist_xml, = Open3.capture2("security", "cms", "-D", "-i", profile_path)
+    profile_uuid = plist_xml.match(%r{<key>UUID</key>\s*<string>([^<]+)</string>})&.[](1)
+    UI.user_error!("Could not parse UUID from profile at #{profile_path}") unless profile_uuid
+
+    profiles_dir = File.expand_path("~/Library/MobileDevice/Provisioning Profiles")
+    FileUtils.mkdir_p(profiles_dir)
+    installed_profile_path = File.join(profiles_dir, "#{profile_uuid}.mobileprovision")
+    FileUtils.cp(profile_path, installed_profile_path)
+    UI.success("Installed profile #{profile_uuid}")
+
     build_app(
       project: "BabyLog.xcodeproj",
       scheme: "BabyLog",
       export_method: "app-store",
-      xcargs: "-allowProvisioningUpdates"
+      # xcargs only apply to the compile/archive step, not exportArchive,
+      # so auth-key flags here are safe and don't bleed into SPM dependencies.
+      xcargs: "-allowProvisioningUpdates " \
+              "-authenticationKeyPath #{key_path} " \
+              "-authenticationKeyID #{ENV["ASC_KEY_ID"]} " \
+              "-authenticationKeyIssuerID #{ENV["ASC_ISSUER_ID"]}",
+      export_options: {
+        method: "app-store",
+        teamID: ENV["TEAM_ID"],
+        signingStyle: "manual",
+        provisioningProfiles: {
+          ENV["APP_IDENTIFIER"] => profile_uuid
+        }
+      }
     )
 
     upload_to_testflight(

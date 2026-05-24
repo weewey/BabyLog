@@ -96,6 +96,18 @@ public struct ToolArguments: Sendable, Equatable {
     /// Allocated per-call to keep the type Sendable without static
     /// `ISO8601DateFormatter` instances (which aren't Sendable).
     static func parseISO8601(_ string: String) -> Date? {
+        // Resolve JavaScript/dynamic "now" expressions that models emit when
+        // they mean the current time but forget they're not in a JS runtime.
+        let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
+        let nowExpressions: Set<String> = [
+            "new Date().toISOString()",
+            "new Date().toISOString",
+            "Date.now()",
+            "now",
+            "NOW",
+        ]
+        if nowExpressions.contains(trimmed) { return Date() }
+
         // Strict: full internet date-time with timezone, optional fractional seconds.
         let withFraction = ISO8601DateFormatter()
         withFraction.formatOptions = [.withInternetDateTime, .withFractionalSeconds]

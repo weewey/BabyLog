@@ -104,6 +104,28 @@ final class ToolArgumentsTests: XCTestCase {
         XCTAssertEqual(components.minute, 0)
     }
 
+    func test_parseISO8601_resolvesJavaScriptNowExpression() {
+        // Gemma sometimes emits JS syntax for "current time". We should get a Date
+        // close to now rather than nil/failure.
+        let before = Date()
+        let result = ToolArguments.parseISO8601("new Date().toISOString()")
+        let after = Date()
+
+        XCTAssertNotNil(result)
+        if let d = result {
+            XCTAssertTrue(d >= before && d <= after)
+        }
+    }
+
+    func test_parseISO8601_resolvesNowKeyword() {
+        let before = Date()
+        let result = ToolArguments.parseISO8601("now")
+        let after = Date()
+
+        XCTAssertNotNil(result)
+        if let d = result { XCTAssertTrue(d >= before && d <= after) }
+    }
+
     func test_optionalString_returnsNilWhenMissing() throws {
         let args = ToolArguments([:])
 

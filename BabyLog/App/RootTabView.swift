@@ -50,21 +50,6 @@ struct RootTabView: View {
         }
     }
 
-    /// If the user's last-selected chat backend is Gemma, kick off a
-    /// background model load at launch so the first turn doesn't pay
-    /// the cold-start penalty. No-op on simulator (Gemma throws
-    /// `unsupportedDevice`) and no-op if the user last used Apple FM —
-    /// don't burn battery or 1.5 GB of RAM on a backend they don't use.
-    private static func warmUpGemmaIfSelected() {
-        #if !targetEnvironment(simulator)
-        let raw = UserDefaults.standard.string(forKey: "chat.selectedBackend")
-        guard raw == "gemma" else { return }
-        Task.detached(priority: .utility) {
-            await Gemma4MLXChatSession.warmUp()
-        }
-        #endif
-    }
-
     private static func makeChatViewModel(
         context: ModelContext,
         sync: SyncComposition,
@@ -286,7 +271,6 @@ struct RootTabView: View {
         .task {
             await LocalFeedReminderNotifier().requestAuthorization()
             BabyLogApp.registerBackgroundFeedRefresh(sync: sync)
-            Self.warmUpGemmaIfSelected()
         }
         .onChange(of: scenePhase) { _, phase in
             switch phase {

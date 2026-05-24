@@ -33,6 +33,16 @@ struct BabyLogApp: App {
         } catch {
             fatalError("[BabyLogApp] SwiftData container failed to initialise: \(error)")
         }
+
+        // Gemma is the only chat backend. Start loading the model container
+        // at app launch so the first chat turn doesn't pay the cold-start penalty.
+        #if !targetEnvironment(simulator)
+        if !isUITesting {
+            Task.detached(priority: .utility) {
+                await Gemma4MLXChatSession.warmUp()
+            }
+        }
+        #endif
     }
 
     /// Registers the background feed-refresh task. Called from
