@@ -208,12 +208,14 @@ final class Gemma4MLXChatSessionTests: XCTestCase {
         XCTAssertEqual(tokens(out + flushed).joined(), "Logged 60 ml.")
     }
 
-    func test_parser_flushesIncompleteCallAsProse() {
+    func test_parser_flushesIncompleteCall_dropssilently() {
         var parser = GemmaToolCallStreamParser()
         _ = parser.consume("```tool_code\ncreateFeedLog(volumeMl=60")
         let flushed = parser.flush()
-        // Incomplete — surfaced as a raw token so the user sees something.
-        XCTAssertFalse(tokens(flushed).isEmpty)
+        // Incomplete fenced call (no closing `)` or ```) is dropped silently —
+        // leaking raw model tokens as prose is worse than losing a partial call.
+        XCTAssertTrue(tokens(flushed).isEmpty)
+        XCTAssertTrue(toolCalls(flushed).isEmpty)
     }
 
     // MARK: - Thinking block stripping (preserved from pre-rewrite)
@@ -382,6 +384,71 @@ final class Gemma4MLXChatSessionTests: XCTestCase {
         let prompt = Gemma4MLXChatSession.gemmaSystemPrompt(today: today, tools: [])
         XCTAssertFalse(prompt.contains("<|tool_call>"))
         XCTAssertFalse(prompt.contains("<tool_call|>"))
+    }
+
+    // MARK: - Bare tool_code\n format (no backticks)
+
+    func test_parser_bareToolCode_noArgCall_parsesCorrectly() {
+        var parser = GemmaToolCallStreamParser()
+        let calls = toolCalls(parser.consume("tool_code\ngetTodayFeedSummary()\n") + parser.flush())
+        XCTAssertEqual(calls.count, 1)
+        XCTAssertEqual(calls.first?.name, "getTodayFeedSummary")
+        XCTAssertTrue(calls.first?.arguments.values.isEmpty ?? false)
+    }
+
+    func test_parser_bareToolCode_withArgs_parsesCorrectly() {
+        var parser = GemmaToolCallStreamParser()
+        let raw = "tool_code\ncreateFeedLog(volumeMl=60, loggedAt=\"2026-05-24T23:37:00\")\n"
+        let calls = toolCalls(parser.consume(raw) + parser.flush())
+        XCTAssertEqual(calls.count, 1)
+        XCTAssertEqual(calls.first?.name, "createFeedLog")
+        XCTAssertEqual(calls.first?.arguments.values["volumeMl"], .int(60))
+    }
+
+    func test_parser_bareToolCode_prefixProseEmittedBeforeCall() {
+        var parser = GemmaToolCallStreamParser()
+        let raw = "Sure!\ntool_code\ncreateFeedLog(volumeMl=60)\n"
+        let all = parser.consume(raw) + parser.flush()
+        let prose = tokens(all).joined()
+        let calls = toolCalls(all)
+        XCTAssertTrue(prose.contains("Sure!"), "prefix prose should emit")
+        XCTAssertEqual(calls.count, 1)
+    }
+
+    func test_parser_bareToolCode_incompleteCall_heldThenDroppedAtFlush() {
+        var parser = GemmaToolCallStreamParser()
+        let partial = "tool_code\ncreateFeedLog(volumeMl=60"
+        let mid = parser.consume(partial)
+        XCTAssertTrue(toolCalls(mid).isEmpty, "incomplete call must not leak as token")
+        XCTAssertTrue(tokens(mid).isEmpty, "incomplete call must not leak as prose")
+        // Flush drops the incomplete call silently (no closing paren).
+        let flushed = parser.flush()
+        XCTAssertTrue(toolCalls(flushed).isEmpty)
+        XCTAssertTrue(tokens(flushed).isEmpty)
+    }
+
+    func test_parser_bareToolCode_completeCallAcrossChunks() {
+        var parser = GemmaToolCallStreamParser()
+        let mid = parser.consume("tool_code\ncreateFeedLog(volumeMl=")
+        XCTAssertTrue(toolCalls(mid).isEmpty)
+        let calls = toolCalls(parser.consume("60)\n") + parser.flush())
+        XCTAssertEqual(calls.count, 1)
+        XCTAssertEqual(calls.first?.name, "createFeedLog")
+        XCTAssertEqual(calls.first?.arguments.values["volumeMl"], .int(60))
+    }
+
+    func test_indexAfterCall_returnsIndexAfterParen() {
+        let s = "foo(x=1, y=2) extra"
+        let idx = GemmaToolCallStreamParser.indexAfterCall(in: s)
+        XCTAssertNotNil(idx)
+        if let idx {
+            XCTAssertEqual(String(s[idx...]), " extra")
+        }
+    }
+
+    func test_indexAfterCall_returnsNilForIncompleteCall() {
+        let s = "foo(x=1, y="
+        XCTAssertNil(GemmaToolCallStreamParser.indexAfterCall(in: s))
     }
 
     // MARK: - Helpers

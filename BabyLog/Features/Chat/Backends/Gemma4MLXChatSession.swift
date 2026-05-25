@@ -485,6 +485,10 @@ struct GemmaToolCallStreamParser: Sendable {
     nonisolated private static let codeFenceOpen = "```tool_code"
     nonisolated private static let outputFenceOpen = "```tool_output"
     nonisolated private static let fenceClose = "```"
+    /// Bare `tool_code\n` emitted without backtick fences. Some Gemma 4
+    /// checkpoint variants omit the triple-backtick fence markers entirely,
+    /// outputting e.g. `tool_code\ncreateFeedLog(...)` as plain text.
+    nonisolated private static let bareToolCodeOpen = "tool_code\n"
     /// Gemma 4 E2B's native tool-call envelope — emitted when the model
     /// decides to call a function outside the documented
     /// ```tool_code``` markdown fence. Observed on TestFlight as e.g.
@@ -599,6 +603,38 @@ struct GemmaToolCallStreamParser: Sendable {
             buffer = String(buffer[closeRange.upperBound...])
         }
 
+        // 1b. Strip bare `tool_code\n` fences (no backticks).
+        // Observed on-device as `tool_code\nfunctionName(args)` with no
+        // surrounding triple backticks — probably a checkpoint variant that
+        // drops the Markdown wrapper. Same parse path as the fenced format.
+        // IMPORTANT: "tool_code\n" is a substring of "```tool_code\n" so we
+        // skip any match that is preceded by a backtick — those belong to the
+        // main fenced-block loop below.
+        while let openRange = buffer.range(of: Self.bareToolCodeOpen) {
+            let beforeMatch = buffer[..<openRange.lowerBound]
+            if beforeMatch.hasSuffix("`") {
+                // This is inside a ```tool_code fence — let the fenced loop handle it.
+                break
+            }
+            let prefix = String(beforeMatch)
+            let callStart = openRange.upperBound
+            let bodyCandidate = String(buffer[callStart...])
+            guard let endOffset = Self.indexAfterCall(in: bodyCandidate) else {
+                // Call not yet complete — hold from the bare opener.
+                if !prefix.isEmpty { out.append(.token(prefix)) }
+                buffer = String(buffer[openRange.lowerBound...])
+                return out
+            }
+            if !prefix.isEmpty { out.append(.token(prefix)) }
+            let callBody = String(bodyCandidate[..<endOffset])
+            if let call = Self.parsePythonCall(body: callBody) {
+                out.append(.toolCall(id: UUID().uuidString, name: call.name, arguments: call.arguments))
+            }
+            let afterEnd = buffer.index(callStart, offsetBy: bodyCandidate.distance(from: bodyCandidate.startIndex, to: endOffset))
+            let remaining = String(buffer[afterEnd...])
+            buffer = remaining.hasPrefix("\n") ? String(remaining.dropFirst()) : remaining
+        }
+
         while true {
             // Locate the next `tool_code` or `tool_output` opener,
             // whichever comes first. Prose up to that point is emitted.
@@ -710,6 +746,14 @@ struct GemmaToolCallStreamParser: Sendable {
                 body = String(afterOpen)
             }
             if let call = Self.parseGemmaNativeCall(body: body) {
+                out.append(.toolCall(id: UUID().uuidString, name: call.name, arguments: call.arguments))
+                return out
+            }
+        }
+        // Bare tool_code\n without closing ``` — parse whatever call body exists.
+        if remaining.hasPrefix(Self.bareToolCodeOpen) {
+            let callBody = String(remaining.dropFirst(Self.bareToolCodeOpen.count))
+            if let call = Self.parsePythonCall(body: callBody) {
                 out.append(.toolCall(id: UUID().uuidString, name: call.name, arguments: call.arguments))
                 return out
             }
@@ -876,7 +920,7 @@ struct GemmaToolCallStreamParser: Sendable {
     /// chunks. We hold back the longest suffix that is a prefix of any
     /// of those openers.
     nonisolated private static func emitBoundary(in buffer: String) -> String.Index {
-        var candidates = [Self.codeFenceOpen, Self.outputFenceOpen, Self.nativeToolOpen]
+        var candidates = [Self.codeFenceOpen, Self.outputFenceOpen, Self.nativeToolOpen, Self.bareToolCodeOpen]
         candidates.append(contentsOf: Self.thinkMarkers.map(\.open))
         candidates.append(contentsOf: Self.harmonyOpeners)
         let maxLen = candidates.map(\.count).max() ?? 0
@@ -891,6 +935,35 @@ struct GemmaToolCallStreamParser: Sendable {
     }
 
     // MARK: - Body parse: `functionName(arg=value, ...)`
+
+    /// Returns the index in `s` immediately after the closing `)` of the
+    /// first balanced Python call expression, or `nil` if the expression
+    /// is incomplete (no `)` at depth 0 yet). Used by the bare
+    /// `tool_code\n` scanner to know when the call body has fully arrived.
+    nonisolated static func indexAfterCall(in s: String) -> String.Index? {
+        guard let parenOpen = s.firstIndex(of: "(") else { return nil }
+        var depth = 0
+        var inString = false
+        var escape = false
+        var i = s.index(after: parenOpen)
+        while i < s.endIndex {
+            let c = s[i]
+            if inString {
+                if escape { escape = false }
+                else if c == "\\" { escape = true }
+                else if c == "\"" { inString = false }
+            } else if c == "\"" {
+                inString = true
+            } else if c == "(" || c == "[" || c == "{" {
+                depth += 1
+            } else if c == ")" || c == "]" || c == "}" {
+                if c == ")" && depth == 0 { return s.index(after: i) }
+                depth -= 1
+            }
+            i = s.index(after: i)
+        }
+        return nil
+    }
 
     struct ParsedCall {
         let name: String
