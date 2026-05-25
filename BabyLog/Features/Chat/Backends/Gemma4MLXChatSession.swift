@@ -663,12 +663,12 @@ struct GemmaToolCallStreamParser: Sendable {
         }
     }
 
-    /// At end-of-stream, flush whatever's still buffered as raw tokens.
-    /// Incomplete tool calls are passed through as prose rather than
-    /// dropped so the user at least sees something went wrong. An
-    /// unclosed `<think>` block is emitted as a best-effort `.reasoning`
-    /// delta rather than leaked as prose — raw chain-of-thought must
-    /// never surface as an assistant bubble.
+    /// At end-of-stream, flush whatever's still buffered.
+    /// Unclosed `<|tool_call>` envelopes are parsed and emitted as real
+    /// `.toolCall` deltas (the model sometimes omits the closing tag for
+    /// no-arg calls). Unclosed `<think>` blocks become `.reasoning`.
+    /// Everything else that could not be parsed is dropped silently —
+    /// raw model tokens must never surface as assistant prose.
     nonisolated mutating func flush() -> [ChatDelta] {
         var out: [ChatDelta] = harmonyNormalize()
         // Drain any still-open analysis block as best-effort reasoning.
@@ -699,7 +699,23 @@ struct GemmaToolCallStreamParser: Sendable {
             }
             return out
         }
-        out.append(.token(remaining))
+        // Unclosed <|tool_call> envelope — model omitted the closing tag.
+        // Parse the body and emit as a real tool call rather than prose.
+        if remaining.hasPrefix(Self.nativeToolOpen) {
+            let afterOpen = remaining.dropFirst(Self.nativeToolOpen.count)
+            let body: String
+            if let closeRange = afterOpen.range(of: Self.nativeToolClose) {
+                body = String(afterOpen[..<closeRange.lowerBound])
+            } else {
+                body = String(afterOpen)
+            }
+            if let call = Self.parseGemmaNativeCall(body: body) {
+                out.append(.toolCall(id: UUID().uuidString, name: call.name, arguments: call.arguments))
+                return out
+            }
+        }
+        // Drop unrecognised trailing bytes silently rather than surfacing
+        // raw model tokens as assistant prose.
         return out
     }
 
@@ -955,17 +971,20 @@ struct GemmaToolCallStreamParser: Sendable {
     }
 
     /// Parse the body of a native `<|tool_call>...<tool_call|>` envelope.
-    /// Shape: `call:toolName{key:value, key:"string", key:10}` — unquoted
-    /// keys, JSON-ish values. Reuses `splitTopLevel` and `decodeValue`
-    /// so number / bool / string / null / nested-object handling matches
-    /// the Python-call path.
+    /// Primary shape: `call:toolName{key:value, key:"string", key:10}`.
+    /// Gemma 4 also emits Python-call syntax for no-arg or simple calls
+    /// (e.g. `call:getTodayFeedSummary()`), so we fall back to
+    /// `parsePythonCall` when no `{` is present.
     nonisolated static func parseGemmaNativeCall(body: String) -> ParsedCall? {
         var s = body.trimmingCharacters(in: .whitespacesAndNewlines)
         if s.hasPrefix("call:") {
             s = String(s.dropFirst("call:".count))
                 .trimmingCharacters(in: .whitespacesAndNewlines)
         }
-        guard let braceOpen = s.firstIndex(of: "{") else { return nil }
+        guard let braceOpen = s.firstIndex(of: "{") else {
+            // No JSON-object body — try Python-call format as fallback.
+            return parsePythonCall(body: s)
+        }
         let name = s[..<braceOpen]
             .trimmingCharacters(in: .whitespacesAndNewlines)
         guard !name.isEmpty, isValidIdentifier(name) else { return nil }
