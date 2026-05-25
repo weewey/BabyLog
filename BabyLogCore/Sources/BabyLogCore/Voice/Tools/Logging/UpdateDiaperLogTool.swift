@@ -11,7 +11,7 @@ public struct UpdateDiaperLogTool: ChatTool {
         properties: [
             ("id", .init(type: .string, description: "UUID of the diaper log to update.")),
             ("type", .init(type: .string, description: "New diaper type.", enumValues: ["wet", "dirty", "both"])),
-            ("loggedAt", .init(type: .string, description: "New local time as yyyy-MM-ddTHH:mm:ss (no Z suffix).")),
+            ("loggedAt", .init(type: .dateTime, description: "Updated date-time.")),
             ("notes", .init(type: .string, description: "New free-text notes.")),
         ],
         required: ["id"]

@@ -13,7 +13,7 @@ public struct UpdateGrowthMeasurementTool: ChatTool {
             ("weightGrams", .init(type: .integer, description: "New weight in grams (500–15000).")),
             ("heightCm", .init(type: .number, description: "New height in centimetres (20.0–120.0).")),
             ("headCircumferenceCm", .init(type: .number, description: "New head circumference in centimetres (20.0–60.0).")),
-            ("date", .init(type: .string, description: "New ISO8601 date of the measurement.")),
+            ("date", .init(type: .dateTime, description: "Updated date-time.")),
             ("notes", .init(type: .string, description: "New free-text notes.")),
         ],
         required: ["id"]

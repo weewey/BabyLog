@@ -16,6 +16,8 @@ public struct ToolInputSchema: Sendable, Equatable, Encodable {
         case integer
         case number
         case boolean
+        /// ISO 8601 date-time. Encodes as `{"type":"string","format":"date-time"}`.
+        case dateTime = "date-time"
     }
 
     public struct Property: Sendable, Equatable {
@@ -73,6 +75,7 @@ public struct ToolInputSchema: Sendable, Equatable, Encodable {
 
     private enum PropKey: String, CodingKey {
         case type
+        case format
         case description
         case `enum`
     }
@@ -90,7 +93,12 @@ public struct ToolInputSchema: Sendable, Equatable, Encodable {
                 keyedBy: PropKey.self,
                 forKey: DynamicKey(stringValue: name)
             )
-            try propEnc.encode(property.type.rawValue, forKey: .type)
+            // dateTime encodes as string + format:date-time (JSON Schema §7.3.1).
+            let jsonType = property.type == .dateTime ? "string" : property.type.rawValue
+            try propEnc.encode(jsonType, forKey: .type)
+            if property.type == .dateTime {
+                try propEnc.encode("date-time", forKey: .format)
+            }
             if let desc = property.description {
                 try propEnc.encode(desc, forKey: .description)
             }

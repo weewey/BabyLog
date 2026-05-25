@@ -12,7 +12,7 @@ public struct CreateMedicalAppointmentTool: ChatTool {
     public let inputSchema = ToolInputSchema(
         properties: [
             ("title", .init(type: .string, description: "Short title for the appointment, e.g. '6-month check-up'.")),
-            ("scheduledAt", .init(type: .string, description: "Local time as yyyy-MM-ddTHH:mm:ss (no Z suffix) for when the appointment is scheduled.")),
+            ("scheduledAt", .init(type: .dateTime, description: "When the appointment is scheduled.")),
             ("location", .init(type: .string, description: "Optional location, e.g. 'Dr Tan's clinic'.")),
             ("notes", .init(type: .string, description: "Optional free-text notes.")),
         ],

@@ -12,7 +12,7 @@ public struct UpdateMedicalAppointmentTool: ChatTool {
         properties: [
             ("id", .init(type: .string, description: "UUID of the appointment to update.")),
             ("title", .init(type: .string, description: "New title.")),
-            ("scheduledAt", .init(type: .string, description: "New local time as yyyy-MM-ddTHH:mm:ss (no Z suffix).")),
+            ("scheduledAt", .init(type: .dateTime, description: "Updated date-time.")),
             ("location", .init(type: .string, description: "New location.")),
             ("notes", .init(type: .string, description: "New notes.")),
         ],

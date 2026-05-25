@@ -12,7 +12,7 @@ public struct CreateMilestoneTool: ChatTool {
         properties: [
             ("title", .init(type: .string, description: "Short title for the milestone.")),
             ("notes", .init(type: .string, description: "Optional free-text notes.")),
-            ("achievedAt", .init(type: .string, description: "Local time as yyyy-MM-ddTHH:mm:ss (no Z suffix). Defaults to now.")),
+            ("achievedAt", .init(type: .dateTime, description: "When this occurred. Omit to use current time.")),
         ],
         required: ["title"]
     )

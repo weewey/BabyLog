@@ -11,7 +11,7 @@ public struct UpdateFeedLogTool: ChatTool {
         properties: [
             ("id", .init(type: .string, description: "UUID of the feed log to update.")),
             ("volumeMl", .init(type: .integer, description: "New volume in millilitres (1–500).")),
-            ("loggedAt", .init(type: .string, description: "New local time as yyyy-MM-ddTHH:mm:ss (no Z suffix).")),
+            ("loggedAt", .init(type: .dateTime, description: "Updated date-time.")),
         ],
         required: ["id"]
     )

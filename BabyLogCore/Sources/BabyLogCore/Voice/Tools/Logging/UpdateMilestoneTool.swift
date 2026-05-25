@@ -11,7 +11,7 @@ public struct UpdateMilestoneTool: ChatTool {
         properties: [
             ("id", .init(type: .string, description: "UUID of the milestone to update.")),
             ("title", .init(type: .string, description: "New milestone title.")),
-            ("achievedAt", .init(type: .string, description: "New local time as yyyy-MM-ddTHH:mm:ss (no Z suffix).")),
+            ("achievedAt", .init(type: .dateTime, description: "Updated date-time.")),
             ("notes", .init(type: .string, description: "New free-text notes.")),
         ],
         required: ["id"]

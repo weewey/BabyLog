@@ -11,7 +11,7 @@ public struct UpdatePumpingSessionTool: ChatTool {
     public let inputSchema = ToolInputSchema(
         properties: [
             ("id", .init(type: .string, description: "UUID of the pumping session to update.")),
-            ("startedAt", .init(type: .string, description: "New ISO8601 start timestamp.")),
+            ("startedAt", .init(type: .dateTime, description: "Updated date-time.")),
             ("durationMinutes", .init(type: .integer, description: "New duration in minutes (1–120).")),
             ("side", .init(type: .string, description: "New side.", enumValues: PumpingSide.allCases.map(\.rawValue))),
             ("milkVolumeMl", .init(type: .integer, description: "New milk volume in millilitres (0–500).")),

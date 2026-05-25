@@ -10,7 +10,7 @@ public struct CreateDiaperLogTool: ChatTool {
     public let inputSchema = ToolInputSchema(
         properties: [
             ("type", .init(type: .string, description: "Diaper contents.", enumValues: ["wet", "dirty", "both"])),
-            ("loggedAt", .init(type: .string, description: "Local time as yyyy-MM-ddTHH:mm:ss (no Z suffix). Defaults to now.")),
+            ("loggedAt", .init(type: .dateTime, description: "When this occurred. Omit to use current time.")),
         ],
         required: ["type"]
     )

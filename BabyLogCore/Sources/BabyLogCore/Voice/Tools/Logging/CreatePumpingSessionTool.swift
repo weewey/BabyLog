@@ -10,7 +10,7 @@ public struct CreatePumpingSessionTool: ChatTool {
 
     public let inputSchema = ToolInputSchema(
         properties: [
-            ("startedAt", .init(type: .string, description: "Local time as yyyy-MM-ddTHH:mm:ss (no Z suffix). Defaults to now if omitted.")),
+            ("startedAt", .init(type: .dateTime, description: "When this occurred. Omit to use current time.")),
             ("durationMinutes", .init(type: .integer, description: "Length of the session in minutes (1–120).")),
             ("side", .init(type: .string, description: "Which breast(s) were pumped.", enumValues: PumpingSide.allCases.map(\.rawValue))),
             ("milkVolumeMl", .init(type: .integer, description: "Milk expressed in millilitres (0–500). Optional.")),

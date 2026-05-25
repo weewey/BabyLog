@@ -11,7 +11,7 @@ public struct CreateFeedLogTool: ChatTool {
     public let inputSchema = ToolInputSchema(
         properties: [
             ("volumeMl", .init(type: .integer, description: "Volume of the feed in millilitres (1–500).")),
-            ("loggedAt", .init(type: .string, description: "Local time as yyyy-MM-ddTHH:mm:ss (no Z suffix). Defaults to now if omitted.")),
+            ("loggedAt", .init(type: .dateTime, description: "When this occurred. Omit to use current time.")),
         ],
         required: ["volumeMl"]
     )

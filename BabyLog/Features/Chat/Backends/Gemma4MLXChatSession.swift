@@ -374,6 +374,11 @@ final class Gemma4MLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
         tools: [any ChatTool]
     ) -> String {
         let stamp = Self.todayDateFormatter.string(from: today)
+        let timeFmt = DateFormatter()
+        timeFmt.dateFormat = "HH:mm"
+        timeFmt.locale = Locale(identifier: "en_US_POSIX")
+        timeFmt.timeZone = .current
+        let timeStamp = timeFmt.string(from: today)
         let tz = TimeZone.current
         let tzName = tz.localizedName(for: .shortGeneric, locale: .current) ?? tz.identifier
         let offsetSeconds = tz.secondsFromGMT()
@@ -385,9 +390,9 @@ final class Gemma4MLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
             ? "No tools are currently available."
             : "Tools:\n\(toolDocs)"
         return """
-        BabyLog Assistant. Today: \(stamp). \
-        Timezone: \(tzName) (\(tzOffset)). \
-        All timestamps must be local time without Z suffix (e.g. 2026-04-19T14:30:00). \
+        BabyLog Assistant. Now: \(stamp)T\(timeStamp) (\(tzName), \(tzOffset)). \
+        For datetime args use this exact format: \(stamp)T\(timeStamp) — \
+        never use JavaScript date expressions. \
         Be warm, brief. Pick defaults and act — never ask to clarify.
 
         \(toolBlock)
@@ -404,7 +409,10 @@ final class Gemma4MLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
     /// Kept compact so a 10-tool registry fits in ~40 tokens.
     private static func renderToolForPrompt(_ tool: any ChatTool) -> String {
         let params = tool.inputSchema.properties
-            .map { name, prop in "\(name): \(prop.type.rawValue)" }
+            .map { name, prop in
+                let typeName = prop.type == .dateTime ? "datetime" : prop.type.rawValue
+                return "\(name): \(typeName)"
+            }
             .joined(separator: ", ")
         return "- \(tool.name)(\(params)) — \(tool.description)"
     }

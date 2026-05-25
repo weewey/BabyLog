@@ -99,14 +99,13 @@ public struct ToolArguments: Sendable, Equatable {
         // Resolve JavaScript/dynamic "now" expressions that models emit when
         // they mean the current time but forget they're not in a JS runtime.
         let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
-        let nowExpressions: Set<String> = [
-            "new Date().toISOString()",
-            "new Date().toISOString",
-            "Date.now()",
-            "now",
-            "NOW",
-        ]
-        if nowExpressions.contains(trimmed) { return Date() }
+        // Exact "now" keywords.
+        let nowKeywords: Set<String> = ["now", "NOW"]
+        if nowKeywords.contains(trimmed) { return Date() }
+        // Any JS Date runtime expression — covers new Date(), Date.now(),
+        // new Date().toISOString(), new Date().toISOString().replace(...), etc.
+        let jsDatePatterns = ["new Date(", "Date.now(", ".toISOString("]
+        if jsDatePatterns.contains(where: { trimmed.contains($0) }) { return Date() }
 
         // Strict: full internet date-time with timezone, optional fractional seconds.
         let withFraction = ISO8601DateFormatter()

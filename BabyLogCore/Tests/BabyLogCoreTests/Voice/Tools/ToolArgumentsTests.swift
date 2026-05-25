@@ -126,6 +126,27 @@ final class ToolArgumentsTests: XCTestCase {
         if let d = result { XCTAssertTrue(d >= before && d <= after) }
     }
 
+    func test_parseISO8601_resolvesJSDateWithChainedReplace() {
+        // Gemma sometimes emits e.g. new Date().toISOString().replace(/[-:]+Z$/, '')
+        let before = Date()
+        let result = ToolArguments.parseISO8601(
+            "new Date().toISOString().replace(/[-:]+Z$/, '')"
+        )
+        let after = Date()
+
+        XCTAssertNotNil(result)
+        if let d = result { XCTAssertTrue(d >= before && d <= after) }
+    }
+
+    func test_parseISO8601_resolvesDateNow() {
+        let before = Date()
+        let result = ToolArguments.parseISO8601("Date.now()")
+        let after = Date()
+
+        XCTAssertNotNil(result)
+        if let d = result { XCTAssertTrue(d >= before && d <= after) }
+    }
+
     func test_optionalString_returnsNilWhenMissing() throws {
         let args = ToolArguments([:])
 
