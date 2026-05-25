@@ -342,10 +342,38 @@ final class Gemma4MLXChatSessionTests: XCTestCase {
             result
         ]
         let (_, lastUser) = Gemma4MLXChatSession.splitHistory(msgs, today: today)
-        XCTAssertEqual(
-            lastUser,
-            "```tool_output\nid=abc\n```"
+        XCTAssertTrue(lastUser?.hasPrefix("```tool_output\nid=abc\n```") ?? false,
+                      "lastUser should start with tool_output fence, got: \(lastUser ?? "nil")")
+    }
+
+    func test_splitHistory_trailingEmptyAssistantShell_isStripped() {
+        // When ChatViewModel's tool loop appends an empty streaming assistant
+        // bubble BEFORE calling splitHistory for iteration 2, that shell must
+        // be ignored — otherwise lastUser becomes "" and the model gets an
+        // empty prompt, producing a silent no-response turn.
+        let call = ChatMessage(
+            role: .tool,
+            text: "",
+            toolEntry: .call(id: "t1", name: "createFeedLog",
+                             arguments: ToolArguments(["volumeMl": .int(60)]))
         )
+        let result = ChatMessage(
+            role: .tool,
+            text: "",
+            toolEntry: .result(id: "t1", name: "createFeedLog",
+                               result: ToolResult(content: "id=abc", isError: false))
+        )
+        let emptyShell = ChatMessage(role: .assistant, text: "")
+        let msgs = [
+            ChatMessage(role: .user, text: "log 60"),
+            call,
+            result,
+            emptyShell  // tool-loop iteration-2 placeholder
+        ]
+        let (_, lastUser) = Gemma4MLXChatSession.splitHistory(msgs, today: today)
+        // Should resolve to the tool result prompt, not ""
+        XCTAssertTrue(lastUser?.hasPrefix("```tool_output") ?? false,
+                      "expected tool_output prompt, got: \(lastUser ?? "nil")")
     }
 
     func test_splitHistory_emptyMessages_returnsEmpty() {

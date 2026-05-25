@@ -47,19 +47,33 @@ final class Gemma4MLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
         cachedContainer = container
     }
 
-    /// Preload and cache the Gemma container so the first real `stream()`
-    /// call skips the model-load phase. Safe to call from app launch on
-    /// a detached Task — it's a no-op if the container is already cached.
-    /// Errors are swallowed on purpose (this is best-effort warmup, the
-    /// real `stream()` path surfaces load failures to the UI).
+    /// Register and start a background model-load task, serialized via
+    /// `inFlightTask` so any concurrent `stream()` call automatically
+    /// awaits the load rather than racing and crashing MLX.
+    /// Call once at app launch — subsequent calls are no-ops.
+    static func startWarmUp(loader: any Gemma4ModelLoader = LiveGemma4ModelLoader()) {
+        lock.lock()
+        guard cachedContainer == nil, inFlightTask == nil else {
+            lock.unlock()
+            return
+        }
+        let task = Task<Void, Never>(priority: .utility) {
+            guard let container = try? await loader.loadContainer(progress: { _ in }) else {
+                return
+            }
+            Self.storeContainer(container)
+        }
+        inFlightTask = task
+        lock.unlock()
+    }
+
+    /// Async overload kept for testability. Prefer `startWarmUp()` at the
+    /// call site unless you need to await completion.
     static func warmUp(
         loader: any Gemma4ModelLoader = LiveGemma4ModelLoader()
     ) async {
-        if loadedContainer() != nil { return }
-        guard let container = try? await loader.loadContainer(progress: { _ in }) else {
-            return
-        }
-        storeContainer(container)
+        startWarmUp(loader: loader)
+        if let task = currentInFlight() { await task.value }
     }
 
     private static func setInFlight(_ task: Task<Void, Never>?) {
@@ -296,23 +310,38 @@ final class Gemma4MLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
             .system(gemmaSystemPrompt(today: today, tools: tools))
         ]
 
+        // Strip any trailing empty assistant shell inserted by ChatViewModel's
+        // tool loop before it calls us. That placeholder has no text/intent/
+        // reasoning yet and must not be treated as the "last message" for the
+        // purpose of determining lastUser — doing so puts splitHistory into the
+        // else branch (lastUser = "") which gives the model an empty prompt and
+        // produces a silent no-response turn.
+        var effective = messages
+        if let last = effective.last,
+           last.role == .assistant,
+           last.text.isEmpty,
+           last.intent == nil,
+           last.reasoning == nil {
+            effective.removeLast()
+        }
+
         // If the last message is a user turn, treat it as the prompt and
         // everything before as history. Otherwise (tool-loop follow-up
         // after a tool result), pop the trailing tool result and pass it
-        // as the next user turn wrapped in `<tool_response>` — the shape
+        // as the next user turn wrapped in `tool_output` — the shape
         // Google's Gemma 4 docs specify for returning tool output.
         let prior: ArraySlice<ChatMessage>
         let lastUser: String
-        if messages.last?.role == .user {
-            prior = messages.dropLast()
-            lastUser = messages.last?.text ?? ""
-        } else if let tail = messages.last,
+        if effective.last?.role == .user {
+            prior = effective.dropLast()
+            lastUser = effective.last?.text ?? ""
+        } else if let tail = effective.last,
                   tail.role == .tool,
                   case .result(_, let name, let result)? = tail.toolEntry {
-            prior = messages.dropLast()
+            prior = effective.dropLast()
             lastUser = renderToolResponse(name: name, content: result.content)
         } else {
-            prior = ArraySlice(messages)
+            prior = ArraySlice(effective)
             lastUser = ""
         }
 

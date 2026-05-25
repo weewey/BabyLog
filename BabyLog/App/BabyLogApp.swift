@@ -36,11 +36,11 @@ struct BabyLogApp: App {
 
         // Gemma is the only chat backend. Start loading the model container
         // at app launch so the first chat turn doesn't pay the cold-start penalty.
+        // startWarmUp() registers the load task in inFlightTask synchronously,
+        // so any concurrent stream() call awaits the load rather than racing it.
         #if !targetEnvironment(simulator)
         if !isUITesting {
-            Task.detached(priority: .utility) {
-                await Gemma4MLXChatSession.warmUp()
-            }
+            Gemma4MLXChatSession.startWarmUp()
         }
         #endif
     }
