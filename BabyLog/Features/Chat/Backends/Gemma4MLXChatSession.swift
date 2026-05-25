@@ -348,7 +348,10 @@ final class Gemma4MLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
         // positional, the model knows which call it pairs with because
         // the assistant's prior turn is the matching `tool_code` block.
         _ = name
-        return "```tool_output\n\(content)\n```"
+        // The explicit directive after the fence is load-bearing: without it,
+        // Gemma 4 E2B treats the tool_output block as a terminal and replies
+        // "What else can I help you with?" instead of quoting the numbers.
+        return "```tool_output\n\(content)\n```\nNow tell the user the result using the data above."
     }
 
     /// Gemma-specific system prompt. Base Gemma 3/4 (non-FunctionGemma)
@@ -390,8 +393,10 @@ final class Gemma4MLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
         \(toolBlock)
 
         Call tools with: ```tool_code\nfunctionName(arg=value)\n``` \
-        Multiple calls = multiple fences. After tool_output, quote the \
-        numbers. Never invent ids — call listRecent* first.
+        Multiple calls = multiple fences. After tool_output you MUST \
+        relay the exact numbers to the user — never reply "What else \
+        can I help you with?" without first stating the result. \
+        Never invent ids — call listRecent* first.
         """
     }
 
