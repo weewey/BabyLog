@@ -16,6 +16,6 @@ Steps:
    export MATCH_GIT_URL=""
    export MATCH_PASSWORD=""
    ```
-4. Run `bundle exec fastlane beta 2>&1 | tee /tmp/fastlane_release.log; echo "EXIT: ${PIPESTATUS[0]}"` from the repo root (`/Users/yewwee/localdev/BabyLog`). This builds, signs, uploads to TestFlight, waits for Apple to finish processing, and automatically adds the build to the "Internal Testers" group. The full lane takes ~15–25 minutes (build ~5–8 min + Apple processing ~10–15 min).
+4. Run `bundle exec fastlane beta 2>&1 | tee /tmp/fastlane_release.log; echo "EXIT: ${PIPESTATUS[0]}"` from the repo root (`/Users/yewwee/localdev/BabyLog`). This builds, signs, uploads to TestFlight, and waits for Apple to finish processing (which auto-enables the build for internal testers). The full lane takes ~15–25 minutes (build ~5–8 min + Apple processing ~10–15 min).
 5. Check the result by running `grep -E "(ARCHIVE SUCCEEDED|EXPORT SUCCEEDED|Successfully uploaded|fastlane finished|EXIT)" /tmp/fastlane_release.log | tail -10`.
 6. Report success or, if there was a failure, show the relevant error lines and fix them.

@@ -96,17 +96,23 @@ public struct ChatEmptyStateSummary: Sendable, Equatable {
         diapersEnabled: Bool = true
     ) -> [ChatSuggestion] {
         _ = calendar
-        _ = now
         _ = lastFeed
         _ = todayFeedCount
+
+        let timeFmt = DateFormatter()
+        timeFmt.dateFormat = "h:mm a"
+        timeFmt.locale = Locale(identifier: "en_US_POSIX")
+        timeFmt.timeZone = .current
+        let at = timeFmt.string(from: now)
+
         var chips: [ChatSuggestion] = [
-            .init(text: "60 ml feed", slug: "feed60", autoSend: false),
-            .init(text: "20 min pump", slug: "pump20", autoSend: false),
+            .init(text: "60 ml feed at \(at)", slug: "feed60", autoSend: false),
+            .init(text: "20 min pump at \(at)", slug: "pump20", autoSend: false),
         ]
         if diapersEnabled {
             chips += [
-                .init(text: "Dirty diaper", slug: "diaperDirty", autoSend: false),
-                .init(text: "Wet diaper", slug: "diaperWet", autoSend: false),
+                .init(text: "Dirty diaper at \(at)", slug: "diaperDirty", autoSend: false),
+                .init(text: "Wet diaper at \(at)", slug: "diaperWet", autoSend: false),
             ]
         }
         chips.append(.init(text: "Today's total", slug: "feedTotal", autoSend: true))
