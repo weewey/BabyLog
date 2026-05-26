@@ -1,4 +1,5 @@
 import Foundation
+import MLX
 import MLXLMCommon
 import MLXLLM
 import MLXHuggingFace
@@ -16,18 +17,23 @@ protocol Gemma4ModelLoader: Sendable {
     ) async throws -> ModelContainer
 }
 
-/// Production loader. Delegates to `mlx-swift-lm`'s
-/// `#huggingFaceLoadModelContainer` macro which wires up the built-in
-/// `Downloader` + `TokenizerLoader` against `mlx-community/gemma-4-e2b-it-4bit`.
+/// Production loader. Uses `LLMModelFactory.shared` (the pattern from
+/// mlx-swift-examples) with a custom `HubClient` for large-shard timeouts.
 /// First call triggers a ~1.5 GB download; subsequent calls reuse the
 /// cached weights on disk.
+///
 struct LiveGemma4ModelLoader: Gemma4ModelLoader {
 
-    func loadContainer(
+    nonisolated init() {}
+
+    nonisolated func loadContainer(
         progress: @Sendable @escaping (Double) -> Void
     ) async throws -> ModelContainer {
+        // Limit GPU cache to prevent OOM (ref: MLXChatExample/MLXService).
+        Memory.cacheLimit = 20 * 1024 * 1024
+
         let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest = 600        // 10 min idle ceiling per request
+        config.timeoutIntervalForRequest = 600        // 10 min idle ceiling per shard
         config.timeoutIntervalForResource = 60 * 60   // 1 hour total per resource
         config.waitsForConnectivity = true
         let session = URLSession(configuration: config)
@@ -41,13 +47,12 @@ struct LiveGemma4ModelLoader: Gemma4ModelLoader {
         // syntax, not base Gemma 3/4 — does not intercept the stream.
         let configuration = LLMRegistry.gemma4_e2b_it_4bit
 
-        return try await loadModelContainer(
+        return try await LLMModelFactory.shared.loadContainer(
             from: #hubDownloader(hubClient),
             using: #huggingFaceTokenizerLoader(),
-            configuration: configuration,
-            progressHandler: { p in
-                progress(p.fractionCompleted)
-            }
-        )
+            configuration: configuration
+        ) { p in
+            progress(p.fractionCompleted)
+        }
     }
 }

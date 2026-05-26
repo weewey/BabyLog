@@ -10,6 +10,10 @@ public enum ChatBackend: String, Sendable, CaseIterable, Codable {
     /// ~1.5 GB model download fetched by `mlx-swift-lm`'s built-in
     /// `Downloader`. Progress surfaces as `ChatDelta.modelLoading`.
     case gemma
+    /// Qwen 3.5 9B via MLX Swift, on-device — requires a one-time
+    /// ~5 GB model download. Stronger reasoning than Gemma 4 E2B.
+    /// Progress surfaces as `ChatDelta.modelLoading`.
+    case qwen
 }
 
 /// Streaming increment from a `ChatSession`. Backends emit these as the

@@ -24,7 +24,7 @@ final class ChatMessageTests: XCTestCase {
     }
 
     func test_chatBackendRoundTripsAsCodable() throws {
-        let backends: [ChatBackend] = [.apple, .gemma]
+        let backends: [ChatBackend] = [.apple, .gemma, .qwen]
 
         for backend in backends {
             let data = try JSONEncoder().encode(backend)
@@ -36,6 +36,7 @@ final class ChatMessageTests: XCTestCase {
     func test_chatBackendRawValuesAreStable() {
         XCTAssertEqual(ChatBackend.apple.rawValue, "apple")
         XCTAssertEqual(ChatBackend.gemma.rawValue, "gemma")
+        XCTAssertEqual(ChatBackend.qwen.rawValue, "qwen")
     }
 
     func test_init_defaultsAttachmentsToEmpty() {

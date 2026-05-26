@@ -31,6 +31,7 @@ public struct FakeChatSessionFactory: ChatSessionFactory {
         switch backend {
         case .apple: label = "Apple"
         case .gemma: label = "Gemma"
+        case .qwen:  label = "Qwen"
         }
         return .tokens(
             ["Hi ", "from ", "\(label). ", "How ", "can ", "I ", "help?"],

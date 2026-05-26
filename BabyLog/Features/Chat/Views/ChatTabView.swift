@@ -68,7 +68,7 @@ struct ChatTabView: View {
         .accessibilityIdentifier("chatTabRoot")
         .onAppear {
             if viewModel.selectedBackend == .apple {
-                viewModel.switchBackend(.gemma)
+                viewModel.switchBackend(.qwen)
             }
         }
     }
@@ -219,6 +219,7 @@ struct ChatTabView: View {
         switch backend {
         case .apple: return .blue
         case .gemma: return .green
+        case .qwen:  return .purple
         }
     }
 
@@ -226,7 +227,7 @@ struct ChatTabView: View {
 
     private func modelLoadingBar(progress: Double) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Loading Gemma 4 on-device… \(Int(progress * 100))%")
+            Text("Loading model on-device… \(Int(progress * 100))%")
                 .font(.caption)
                 .foregroundStyle(.secondary)
             ProgressView(value: progress)
@@ -509,17 +510,18 @@ struct ChatTabView: View {
                 Label(backendTitle(viewModel.selectedBackend), systemImage: "brain.head.profile")
             }
             .accessibilityLabel("Chat backend picker, \(backendTitle(viewModel.selectedBackend))")
-            .accessibilityHint("Tap to switch between Apple and Gemma backends")
+            .accessibilityHint("Tap to switch between Qwen and Gemma backends")
             .accessibilityIdentifier("chatBackendMenu")
         }
     }
 
-    private var visibleBackends: [ChatBackend] { [.gemma] }
+    private var visibleBackends: [ChatBackend] { [.qwen, .gemma] }
 
     private func backendTitle(_ backend: ChatBackend) -> String {
         switch backend {
         case .apple: return "Apple"
-        case .gemma: return "Gemma"
+        case .gemma: return "Gemma 4"
+        case .qwen:  return "Qwen 3.5"
         }
     }
 
