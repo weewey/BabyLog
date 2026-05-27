@@ -141,9 +141,15 @@ public struct ChatSuggestion: Sendable, Hashable {
         self.autoSend = autoSend
     }
 
-    /// Resolve the chip text at the given moment. Call this at tap time
-    /// (not at view load time) so the timestamp reflects when the user
-    /// actually taps, not when the page loaded.
+    /// Label shown in the chip UI — the template with ` at {time}` removed
+    /// so no stale timestamp appears before the user taps.
+    public var displayText: String {
+        template.replacingOccurrences(of: " at {time}", with: "")
+    }
+
+    /// Full text injected into the composer at tap time. The `{time}`
+    /// placeholder is replaced with the current clock time so the
+    /// timestamp always reflects when the user actually taps.
     public func resolvedText(now: Date) -> String {
         guard template.contains("{time}") else { return template }
         return template.replacingOccurrences(

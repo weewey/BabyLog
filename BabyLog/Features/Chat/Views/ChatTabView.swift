@@ -289,7 +289,7 @@ struct ChatTabView: View {
                         HStack(spacing: 6) {
                             chipIcon(for: prompt.slug)
                                 .font(.footnote.weight(.medium))
-                            Text(prompt.resolvedText(now: Date()))
+                            Text(prompt.displayText)
                                 .font(.footnote.weight(.medium))
                                 .lineLimit(1)
                         }
@@ -302,7 +302,7 @@ struct ChatTabView: View {
                     .buttonStyle(.plain)
                     .disabled(viewModel.isStreaming)
                     .opacity(viewModel.isStreaming ? 0.5 : 1)
-                    .accessibilityLabel(prompt.resolvedText(now: Date()))
+                    .accessibilityLabel(prompt.displayText)
                     .accessibilityHint(
                         prompt.autoSend
                             ? "Sends this message right away."
