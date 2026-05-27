@@ -32,7 +32,7 @@ private struct GrowthMeasurementRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text(entry.date, style: .date)
+                Text(RelativeTime.sectionLabel(for: entry.date))
                     .font(.subheadline.weight(.semibold))
                 Spacer()
                 Text(RelativeTime.shortLabel(for: entry.date))

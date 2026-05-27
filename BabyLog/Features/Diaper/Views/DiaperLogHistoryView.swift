@@ -24,7 +24,7 @@ struct DiaperLogHistoryView: View {
             }
         } else {
             ForEach(groupedEntries, id: \.0) { day, entries in
-                Section(header: Text(day, style: .date)) {
+                Section(header: Text(RelativeTime.sectionLabel(for: day))) {
                     ForEach(entries) { entry in
                         DiaperLogRow(entry: entry)
                             .accessibilityIdentifier("diaperRow_\(entry.id)")
