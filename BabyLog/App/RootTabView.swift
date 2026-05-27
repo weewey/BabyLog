@@ -66,7 +66,9 @@ struct RootTabView: View {
         }
         let factory: any ChatSessionFactory = forceFake
             ? FakeChatSessionFactory()
-            : LiveChatSessionFactory()
+            : LiveChatSessionFactory(profileLoader: {
+                try? SwiftDataChildProfileRepository(context: context).load()
+            })
 
         let feedRepo: any FeedLogRepository = sync.makeFeedLogRepository()
         let diaperRepo: any DiaperLogRepository = sync.makeDiaperLogRepository()

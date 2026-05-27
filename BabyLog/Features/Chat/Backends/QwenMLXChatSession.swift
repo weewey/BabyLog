@@ -70,12 +70,17 @@ final class QwenMLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
     // MARK: - Instance
 
     private let loader: any QwenMLXModelLoader
+    private let childProfile: ChildProfile?
 
-    init(loader: any QwenMLXModelLoader = LiveQwenMLXModelLoader()) throws {
+    init(
+        loader: any QwenMLXModelLoader = LiveQwenMLXModelLoader(),
+        childProfile: ChildProfile? = nil
+    ) throws {
         #if targetEnvironment(simulator)
         throw QwenMLXChatSessionError.unsupportedDevice
         #else
         self.loader = loader
+        self.childProfile = childProfile
         #endif
     }
 
@@ -91,6 +96,7 @@ final class QwenMLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
     ) -> AsyncThrowingStream<ChatDelta, Error> {
         AsyncThrowingStream { continuation in
             let loader = self.loader
+            let childProfile = self.childProfile
             let prior = Self.currentInFlight()
             var recorder = GemmaTelemetryRecorder(historyCount: messages.count)
             let task = Task {
@@ -105,6 +111,7 @@ final class QwenMLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
                         container: container,
                         messages: messages,
                         tools: tools,
+                        childProfile: childProfile,
                         continuation: continuation,
                         recorder: &recorder
                     )
@@ -153,11 +160,12 @@ final class QwenMLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
         container: ModelContainer,
         messages: [ChatMessage],
         tools: ToolRegistry?,
+        childProfile: ChildProfile?,
         continuation: AsyncThrowingStream<ChatDelta, Error>.Continuation,
         recorder: inout GemmaTelemetryRecorder
     ) async throws {
         let toolList: [any ChatTool] = filterToolsForOnDevice(tools?.all ?? [])
-        let (history, lastUser) = splitHistory(messages, today: Date(), tools: toolList)
+        let (history, lastUser) = splitHistory(messages, today: Date(), tools: toolList, childProfile: childProfile)
         guard let lastUser else { return }
 
         let thinkingEnabled = UserDefaults.standard.bool(forKey: "chat.enableThinking")
@@ -243,12 +251,13 @@ final class QwenMLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
     static func splitHistory(
         _ messages: [ChatMessage],
         today: Date,
-        tools: [any ChatTool] = []
+        tools: [any ChatTool] = [],
+        childProfile: ChildProfile? = nil
     ) -> (history: [Chat.Message], lastUser: String?) {
         guard !messages.isEmpty else { return ([], nil) }
 
         var history: [Chat.Message] = [
-            .system(qwenSystemPrompt(today: today, tools: tools))
+            .system(qwenSystemPrompt(today: today, tools: tools, childProfile: childProfile))
         ]
 
         var effective = messages
@@ -339,7 +348,11 @@ final class QwenMLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
     /// Qwen 3's documented tool format: JSON array inside `<tools>` tags in
     /// the system prompt. The model emits calls as
     /// `<tool_call>{"name":"...","arguments":{...}}</tool_call>`.
-    static func qwenSystemPrompt(today: Date, tools: [any ChatTool]) -> String {
+    static func qwenSystemPrompt(
+        today: Date,
+        tools: [any ChatTool],
+        childProfile: ChildProfile? = nil
+    ) -> String {
         let stamp = todayDateFormatter.string(from: today)
         let timeFmt = DateFormatter()
         timeFmt.dateFormat = "HH:mm"
@@ -352,9 +365,16 @@ final class QwenMLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
         let sign = offsetSeconds >= 0 ? "+" : "-"
         let absOffset = abs(offsetSeconds)
         let tzOffset = String(format: "UTC%@%02d:%02d", sign, absOffset / 3600, (absOffset % 3600) / 60)
+        let babyClause: String
+        if let profile = childProfile {
+            let dob = todayDateFormatter.string(from: profile.dateOfBirth)
+            babyClause = "tracking baby \(profile.name) (born \(dob))"
+        } else {
+            babyClause = "tracking a baby"
+        }
 
         var base = """
-        You are the BabyLog Assistant helping track baby Ethan (born 2026-04-07). \
+        You are the BabyLog Assistant helping \(babyClause). \
         Now: \(stamp)T\(timeStamp) (\(tzName), \(tzOffset)). \
         For datetime args use this exact format: \(stamp)T\(timeStamp) — \
         never use JavaScript date expressions. \

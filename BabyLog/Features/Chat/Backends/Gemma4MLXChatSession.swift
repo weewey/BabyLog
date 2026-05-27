@@ -90,12 +90,17 @@ final class Gemma4MLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
     // MARK: - Instance
 
     private let loader: any Gemma4ModelLoader
+    private let childProfile: ChildProfile?
 
-    init(loader: any Gemma4ModelLoader = LiveGemma4ModelLoader()) throws {
+    init(
+        loader: any Gemma4ModelLoader = LiveGemma4ModelLoader(),
+        childProfile: ChildProfile? = nil
+    ) throws {
         #if targetEnvironment(simulator)
         throw Gemma4MLXChatSessionError.unsupportedDevice
         #else
         self.loader = loader
+        self.childProfile = childProfile
         #endif
     }
 
@@ -114,6 +119,7 @@ final class Gemma4MLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
     ) -> AsyncThrowingStream<ChatDelta, Error> {
         AsyncThrowingStream { continuation in
             let loader = self.loader
+            let childProfile = self.childProfile
             // Capture the prior task *before* publishing our own handle,
             // otherwise the new task sees itself as the "prior" task and
             // deadlocks awaiting its own completion.
@@ -133,6 +139,7 @@ final class Gemma4MLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
                         container: container,
                         messages: messages,
                         tools: tools,
+                        childProfile: childProfile,
                         continuation: continuation,
                         recorder: &recorder
                     )
@@ -185,6 +192,7 @@ final class Gemma4MLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
         container: ModelContainer,
         messages: [ChatMessage],
         tools: ToolRegistry?,
+        childProfile: ChildProfile?,
         continuation: AsyncThrowingStream<ChatDelta, Error>.Continuation,
         recorder: inout GemmaTelemetryRecorder
     ) async throws {
@@ -200,7 +208,8 @@ final class Gemma4MLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
         let (history, lastUser) = splitHistory(
             messages,
             today: Date(),
-            tools: toolList
+            tools: toolList,
+            childProfile: childProfile
         )
         guard let lastUser else { return }
 
@@ -310,12 +319,13 @@ final class Gemma4MLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
     static func splitHistory(
         _ messages: [ChatMessage],
         today: Date,
-        tools: [any ChatTool] = []
+        tools: [any ChatTool] = [],
+        childProfile: ChildProfile? = nil
     ) -> (history: [Chat.Message], lastUser: String?) {
         guard !messages.isEmpty else { return ([], nil) }
 
         var history: [Chat.Message] = [
-            .system(gemmaSystemPrompt(today: today, tools: tools))
+            .system(gemmaSystemPrompt(today: today, tools: tools, childProfile: childProfile))
         ]
 
         // Strip any trailing empty assistant shell inserted by ChatViewModel's
@@ -408,7 +418,8 @@ final class Gemma4MLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
     /// only sees tools that are actually wired up.
     static func gemmaSystemPrompt(
         today: Date,
-        tools: [any ChatTool]
+        tools: [any ChatTool],
+        childProfile: ChildProfile? = nil
     ) -> String {
         let stamp = Self.todayDateFormatter.string(from: today)
         let timeFmt = DateFormatter()
@@ -426,8 +437,15 @@ final class Gemma4MLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
         let toolBlock = toolDocs.isEmpty
             ? "No tools are currently available."
             : "Tools:\n\(toolDocs)"
+        let babyLine: String
+        if let profile = childProfile {
+            let dob = Self.todayDateFormatter.string(from: profile.dateOfBirth)
+            babyLine = "Baby: \(profile.name), born \(dob). "
+        } else {
+            babyLine = ""
+        }
         return """
-        BabyLog Assistant. Now: \(stamp)T\(timeStamp) (\(tzName), \(tzOffset)). \
+        BabyLog Assistant. \(babyLine)Now: \(stamp)T\(timeStamp) (\(tzName), \(tzOffset)). \
         For datetime args use this exact format: \(stamp)T\(timeStamp) — \
         never use JavaScript date expressions. \
         Be warm, brief. Pick defaults and act — never ask to clarify.
