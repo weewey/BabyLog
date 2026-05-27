@@ -109,8 +109,9 @@ platform :ios do
 
     # skip_waiting_for_build_processing defaults to false — pilot waits for Apple
     # to finish processing, which automatically enables the build for internal testers.
-    # Do NOT use groups: ["Internal Testers"] — that triggers the external beta
-    # submission flow which requires a beta app description we haven't set.
+    # Do NOT use groups: ["Internal Testers"] — that group is external in ASC and
+    # triggers the external beta submission flow requiring a Beta App Description.
+    # To receive builds, testers must be added as App Store Connect users (internal).
     upload_to_testflight(
       api_key: api_key
     )
