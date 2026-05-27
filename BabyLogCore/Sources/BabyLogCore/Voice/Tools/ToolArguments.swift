@@ -107,22 +107,30 @@ public struct ToolArguments: Sendable, Equatable {
         let jsDatePatterns = ["new Date(", "Date.now(", ".toISOString("]
         if jsDatePatterns.contains(where: { trimmed.contains($0) }) { return Date() }
 
-        // Strict: full internet date-time with timezone, optional fractional seconds.
-        let withFraction = ISO8601DateFormatter()
-        withFraction.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        if let d = withFraction.date(from: string) { return d }
+        // All datetime args in this app are local times (the AI is explicitly
+        // told to use the device's local time in the system prompt). If the
+        // model appends a timezone specifier ("Z" or "+HH:MM") anyway — a
+        // common LLM habit — strip it and interpret the value as local time
+        // BEFORE falling through to the strict UTC parsers. This prevents a
+        // feed logged at "9:31 AM local" from being stored as "9:31 AM UTC"
+        // (which would be displayed as 5:31 PM local on a UTC+8 device and
+        // grouped under the wrong calendar day).
+        let naiveCandidate: String
+        if trimmed.hasSuffix("Z") {
+            naiveCandidate = String(trimmed.dropLast())
+        } else if let plusIdx = trimmed.range(of: "+", options: .backwards),
+                  trimmed.distance(from: plusIdx.lowerBound, to: trimmed.endIndex) <= 6 {
+            naiveCandidate = String(trimmed[..<plusIdx.lowerBound])
+        } else {
+            naiveCandidate = trimmed
+        }
 
-        let plain = ISO8601DateFormatter()
-        plain.formatOptions = [.withInternetDateTime]
-        if let d = plain.date(from: string) { return d }
-
-        // Naive / timezone-less forms emitted by chat models. Interpret in
-        // the device's current timezone so the user sees what they said.
         let naive = DateFormatter()
         naive.calendar = Calendar(identifier: .gregorian)
         naive.locale = Locale(identifier: "en_US_POSIX")
         naive.timeZone = .current
 
+        // Try the stripped candidate (or the original if nothing was stripped).
         for format in [
             "yyyy-MM-dd'T'HH:mm:ss.SSS",
             "yyyy-MM-dd'T'HH:mm:ss",
@@ -130,8 +138,18 @@ public struct ToolArguments: Sendable, Equatable {
             "yyyy-MM-dd"
         ] {
             naive.dateFormat = format
-            if let d = naive.date(from: string) { return d }
+            if let d = naive.date(from: naiveCandidate) { return d }
         }
+
+        // Last resort: strict UTC ISO8601 (handles any legitimate Z-suffixed
+        // string that didn't match the naive formats above).
+        let withFraction = ISO8601DateFormatter()
+        withFraction.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let d = withFraction.date(from: string) { return d }
+
+        let plain = ISO8601DateFormatter()
+        plain.formatOptions = [.withInternetDateTime]
+        if let d = plain.date(from: string) { return d }
 
         return nil
     }

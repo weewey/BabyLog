@@ -52,15 +52,35 @@ final class ToolArgumentsTests: XCTestCase {
         XCTAssertTrue(try args.bool("k"))
     }
 
-    func test_date_parsesISO8601String() throws {
+    /// Z-suffixed strings emitted by LLMs are treated as local time because
+    /// the AI is always told to emit the device's current local time.
+    /// Stripping "Z" and interpreting as local prevents feeds logged at
+    /// e.g. "9:31 AM local" from being stored 8 h off in a UTC+8 timezone.
+    func test_date_parsesZSuffixedStringAsLocalTime() throws {
         let args = ToolArguments(["t": .string("2026-04-13T14:32:00Z")])
 
         let date = try args.date("t")
 
-        XCTAssertEqual(
-            date.timeIntervalSince1970,
-            ISO8601DateFormatter().date(from: "2026-04-13T14:32:00Z")?.timeIntervalSince1970
-        )
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = .current
+        let components = cal.dateComponents([.year, .month, .day, .hour, .minute], from: date)
+        XCTAssertEqual(components.year, 2026)
+        XCTAssertEqual(components.month, 4)
+        XCTAssertEqual(components.day, 13)
+        XCTAssertEqual(components.hour, 14)
+        XCTAssertEqual(components.minute, 32)
+    }
+
+    func test_date_parsesZSuffixedStringWithoutSecondsAsLocalTime() throws {
+        let args = ToolArguments(["t": .string("2026-04-13T09:31Z")])
+
+        let date = try args.date("t")
+
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = .current
+        let components = cal.dateComponents([.hour, .minute], from: date)
+        XCTAssertEqual(components.hour, 9)
+        XCTAssertEqual(components.minute, 31)
     }
 
     func test_date_parsesNaiveISO8601AsLocalTime() throws {

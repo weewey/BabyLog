@@ -51,10 +51,15 @@ final class UpdateDiaperLogToolTests: XCTestCase {
         XCTAssertEqual(stored.count, 1)
         XCTAssertEqual(stored.first?.type, .both)
         XCTAssertEqual(stored.first?.notes, "updated")
-        XCTAssertEqual(
-            stored.first?.loggedAt,
-            ISO8601DateFormatter().date(from: newDate)
-        )
+        // "Z"-suffixed strings from the AI are treated as local time (not UTC).
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = .current
+        let components = cal.dateComponents([.year, .month, .day, .hour, .minute], from: try XCTUnwrap(stored.first?.loggedAt))
+        XCTAssertEqual(components.year, 2026)
+        XCTAssertEqual(components.month, 4)
+        XCTAssertEqual(components.day, 13)
+        XCTAssertEqual(components.hour, 10)
+        XCTAssertEqual(components.minute, 30)
     }
 
     func test_updateDiaperLog_unknownId_throwsExecutionFailed() async {
