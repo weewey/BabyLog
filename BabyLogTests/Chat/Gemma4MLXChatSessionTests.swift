@@ -1,5 +1,6 @@
 import XCTest
 import BabyLogCore
+import MLXLMCommon
 @testable import BabyLog
 
 /// Pure-logic tests for the Gemma 4 backend. Covers the two bug-prone
@@ -380,6 +381,126 @@ final class Gemma4MLXChatSessionTests: XCTestCase {
         let (history, lastUser) = Gemma4MLXChatSession.splitHistory([], today: today)
         XCTAssertTrue(history.isEmpty)
         XCTAssertNil(lastUser)
+    }
+
+    /// When the model emits prose BEFORE a tool call, the assistant message
+    /// (prose) and the subsequent tool_call message must be merged into a
+    /// single `.assistant` entry in the MLX history. Two consecutive
+    /// assistant entries would create two separate model turns in the chat
+    /// template, confusing the model on follow-up turns.
+    func test_splitHistory_proseBeforeToolCall_mergedIntoOneAssistantTurn() {
+        let proseShell = ChatMessage(role: .assistant, text: "Sure, logging that…")
+        let call = ChatMessage(
+            role: .tool, text: "",
+            toolEntry: .call(id: "t1", name: "createFeedLog",
+                             arguments: ToolArguments(["volumeMl": .int(60)]))
+        )
+        let result = ChatMessage(
+            role: .tool, text: "",
+            toolEntry: .result(id: "t1", name: "createFeedLog",
+                               result: ToolResult(content: "id=abc", isError: false))
+        )
+        let confirmShell = ChatMessage(role: .assistant, text: "Done! Logged 60 ml.")
+        let msgs = [
+            ChatMessage(role: .user, text: "log 60"),
+            proseShell,      // prose emitted before tool call
+            call,
+            result,
+            confirmShell,
+            ChatMessage(role: .user, text: "what did I just log?")
+        ]
+
+        let (history, _) = Gemma4MLXChatSession.splitHistory(msgs, today: today)
+
+        // No two consecutive assistant entries anywhere in history.
+        // Note: Chat.Message is a struct with .role + .content (not an enum).
+        var prevWasAssistant = false
+        for entry in history {
+            if entry.role == .assistant {
+                XCTAssertFalse(prevWasAssistant, "two consecutive assistant entries in history: \(history)")
+                prevWasAssistant = true
+            } else {
+                prevWasAssistant = false
+            }
+        }
+
+        // The merged assistant entry should contain BOTH the prose and the tool_code fence.
+        let assistantTexts: [String] = history
+            .filter { $0.role == .assistant }
+            .map { $0.content }
+        let firstAssistant = assistantTexts.first ?? ""
+        XCTAssertTrue(firstAssistant.contains("Sure, logging that"),
+                      "prose should be in the merged assistant entry: \(firstAssistant)")
+        XCTAssertTrue(firstAssistant.contains("tool_code"),
+                      "tool call should be in the merged assistant entry: \(firstAssistant)")
+    }
+
+    /// Historical tool results (in the `history` array) must NOT include the
+    /// "Now tell the user the result…" directive — that directive is only
+    /// load-bearing on the ACTIVE (current) turn's `lastUser` prompt.
+    /// Leaving it in history causes the model to re-execute the instruction
+    /// on every subsequent message, producing spurious relay responses.
+    func test_splitHistory_historicalToolResult_hasNoRelayDirective() {
+        let call = ChatMessage(
+            role: .tool, text: "",
+            toolEntry: .call(id: "t1", name: "createFeedLog",
+                             arguments: ToolArguments(["volumeMl": .int(60)]))
+        )
+        let result = ChatMessage(
+            role: .tool, text: "",
+            toolEntry: .result(id: "t1", name: "createFeedLog",
+                               result: ToolResult(content: "id=abc", isError: false))
+        )
+        let msgs = [
+            ChatMessage(role: .user, text: "log 60"),
+            call,
+            result,
+            ChatMessage(role: .assistant, text: "Done! Logged 60 ml."),
+            ChatMessage(role: .user, text: "what did I just log?")
+        ]
+
+        let (history, _) = Gemma4MLXChatSession.splitHistory(msgs, today: today)
+
+        // The tool result appears as a user turn in history.
+        // Note: Chat.Message is a struct with .role + .content (not an enum).
+        let userTexts: [String] = history
+            .filter { $0.role == .user }
+            .map { $0.content }
+        // First user text = the original "log 60"; second = the historical tool result.
+        let toolResultEntry = userTexts.first(where: { $0.contains("tool_output") }) ?? ""
+        XCTAssertFalse(
+            toolResultEntry.contains("Now tell the user"),
+            "historical tool result must not contain relay directive: \(toolResultEntry)"
+        )
+    }
+
+    /// The ACTIVE (current-turn) tool result — passed as `lastUser` — must
+    /// still include the relay directive so Gemma doesn't reply with a
+    /// generic "anything else?" instead of quoting the logged numbers.
+    func test_splitHistory_activeToolResult_hasRelayDirective() {
+        let call = ChatMessage(
+            role: .tool, text: "",
+            toolEntry: .call(id: "t1", name: "createFeedLog",
+                             arguments: ToolArguments(["volumeMl": .int(60)]))
+        )
+        let result = ChatMessage(
+            role: .tool, text: "",
+            toolEntry: .result(id: "t1", name: "createFeedLog",
+                               result: ToolResult(content: "id=abc", isError: false))
+        )
+        let msgs = [
+            ChatMessage(role: .user, text: "log 60"),
+            call,
+            result
+            // No trailing assistant — this IS the active tool-loop turn
+        ]
+
+        let (_, lastUser) = Gemma4MLXChatSession.splitHistory(msgs, today: today)
+
+        XCTAssertTrue(
+            lastUser?.contains("Now tell the user") ?? false,
+            "active tool result lastUser must contain relay directive: \(lastUser ?? "nil")"
+        )
     }
 
     // MARK: - System prompt

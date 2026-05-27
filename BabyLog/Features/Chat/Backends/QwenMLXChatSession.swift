@@ -299,9 +299,19 @@ final class QwenMLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
                 guard let entry = msg.toolEntry else { continue }
                 switch entry {
                 case .call(_, let name, let arguments):
-                    history.append(.assistant(renderQwenCall(name: name, arguments: arguments)))
+                    let callText = renderQwenCall(name: name, arguments: arguments)
+                    // Merge prose + tool-call into one assistant turn so Qwen's
+                    // chat template sees a single <|im_start|>assistant…<|im_end|>
+                    // block instead of two consecutive assistant entries.
+                    if history.last?.role == .assistant {
+                        let prev = history.removeLast().content
+                        history.append(.assistant(prev + "\n" + callText))
+                    } else {
+                        history.append(.assistant(callText))
+                    }
                 case .result(_, let name, let result):
-                    history.append(.user(renderToolResponse(name: name, content: result.content)))
+                    // Historical results: omit "relay the result" directive.
+                    history.append(.user(renderToolResponse(name: name, content: result.content, isActive: false)))
                 }
             }
         }
@@ -325,9 +335,16 @@ final class QwenMLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
     }
 
     /// Render a tool result in Qwen 3's `<tool_response>` format.
-    private static func renderToolResponse(name: String, content: String) -> String {
+    /// - Parameter isActive: `true` for the current (active) tool result;
+    ///   adds the relay directive. `false` for historical entries — omit
+    ///   the directive so the model doesn't re-execute it on every turn.
+    private static func renderToolResponse(name: String, content: String, isActive: Bool = true) -> String {
         _ = name
-        return "<tool_response>\n\(content)\n</tool_response>\nNow tell the user the result using the data above."
+        if isActive {
+            return "<tool_response>\n\(content)\n</tool_response>\nNow tell the user the result using the data above."
+        } else {
+            return "<tool_response>\n\(content)\n</tool_response>"
+        }
     }
 
     /// Recursively convert `JSONValue` to `Any` for `JSONSerialization`.

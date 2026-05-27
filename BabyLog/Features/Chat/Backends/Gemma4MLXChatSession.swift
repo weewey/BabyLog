@@ -368,6 +368,9 @@ final class Gemma4MLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
             case .user:
                 history.append(.user(msg.text))
             case .assistant:
+                // Skip empty assistant shells (e.g. the placeholder bubble
+                // that ChatViewModel inserts before streaming starts). They
+                // carry no content and would produce a blank model turn.
                 if !msg.text.isEmpty {
                     history.append(.assistant(msg.text))
                 }
@@ -377,9 +380,30 @@ final class Gemma4MLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
                 guard let entry = msg.toolEntry else { continue }
                 switch entry {
                 case .call(_, let name, let arguments):
-                    history.append(.assistant(renderGemmaCall(name: name, arguments: arguments)))
+                    let callText = renderGemmaCall(name: name, arguments: arguments)
+                    // If the immediately preceding history entry is also an
+                    // assistant turn, the model emitted prose *before* the
+                    // tool call. Gemma's chat template expects everything
+                    // from one assistant turn (prose + tool_code) to live
+                    // in a single <start_of_turn>model…<end_of_turn> block.
+                    // Two consecutive assistant entries would produce two
+                    // model turns, which confuses the model on subsequent
+                    // turns. Merge them instead.
+                    // Note: Chat.Message is a struct (role + content),
+                    // so we check .role instead of using enum pattern matching.
+                    if history.last?.role == .assistant {
+                        let prev = history.removeLast().content
+                        history.append(.assistant(prev + "\n" + callText))
+                    } else {
+                        history.append(.assistant(callText))
+                    }
                 case .result(_, let name, let result):
-                    history.append(.user(renderToolResponse(name: name, content: result.content)))
+                    // Historical tool results — no "tell the user" directive.
+                    // That directive is only load-bearing on the *active* turn
+                    // (passed as `lastUser`). Leaving it in history causes the
+                    // model to repeat the "relay the result" instruction on
+                    // every subsequent turn, producing spurious re-summaries.
+                    history.append(.user(renderToolResponse(name: name, content: result.content, isActive: false)))
                 }
             }
         }
@@ -390,15 +414,26 @@ final class Gemma4MLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
     /// base Gemma 3/4 expects per Google's chat-template docs. The model
     /// sees a user turn containing a `tool_output` markdown code block and
     /// knows to respond with a confirmation sentence rather than re-calling.
-    private static func renderToolResponse(name: String, content: String) -> String {
+    ///
+    /// - Parameter isActive: `true` for the current (active) tool result
+    ///   turn — adds a directive telling the model to relay the numbers.
+    ///   `false` for historical results stored in the context window —
+    ///   the plain fence is enough; the directive must not repeat.
+    private static func renderToolResponse(name: String, content: String, isActive: Bool = true) -> String {
         // `name` is intentionally dropped — the `tool_output` fence is
         // positional, the model knows which call it pairs with because
         // the assistant's prior turn is the matching `tool_code` block.
         _ = name
-        // The explicit directive after the fence is load-bearing: without it,
-        // Gemma 4 E2B treats the tool_output block as a terminal and replies
-        // "What else can I help you with?" instead of quoting the numbers.
-        return "```tool_output\n\(content)\n```\nNow tell the user the result using the data above."
+        // The explicit directive after the fence is load-bearing on the active
+        // turn: without it, Gemma 4 E2B treats the tool_output block as a
+        // terminal and replies "What else can I help you with?" instead of
+        // quoting the numbers. Historical turns omit it so the model doesn't
+        // re-execute the relay instruction on every subsequent message.
+        if isActive {
+            return "```tool_output\n\(content)\n```\nNow tell the user the result using the data above."
+        } else {
+            return "```tool_output\n\(content)\n```"
+        }
     }
 
     /// Gemma-specific system prompt. Base Gemma 3/4 (non-FunctionGemma)
