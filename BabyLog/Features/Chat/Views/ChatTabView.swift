@@ -521,7 +521,7 @@ struct ChatTabView: View {
         switch backend {
         case .apple: return "Apple"
         case .gemma: return "Gemma 4"
-        case .qwen:  return "Qwen 3.5"
+        case .qwen:  return "Qwen 3"
         }
     }
 

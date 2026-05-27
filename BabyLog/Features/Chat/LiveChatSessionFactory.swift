@@ -8,7 +8,7 @@ import BabyLogCore
 ///   pre-iOS-26 hardware.
 /// - `.gemma` → `Gemma4MLXChatSession` (Gemma 4 E2B via MLX Swift, ~1.5 GB).
 ///   Simulator throws `.unavailable`.
-/// - `.qwen` → `QwenMLXChatSession` (Qwen 3.5 9B via MLX Swift, ~5 GB).
+/// - `.qwen` → `QwenMLXChatSession` (Qwen 3 4B via MLX Swift, ~2.3 GB).
 ///   Simulator throws `.unsupportedDevice`.
 struct LiveChatSessionFactory: ChatSessionFactory {
 

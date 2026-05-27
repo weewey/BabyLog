@@ -10,8 +10,8 @@ public enum ChatBackend: String, Sendable, CaseIterable, Codable {
     /// ~1.5 GB model download fetched by `mlx-swift-lm`'s built-in
     /// `Downloader`. Progress surfaces as `ChatDelta.modelLoading`.
     case gemma
-    /// Qwen 3.5 9B via MLX Swift, on-device — requires a one-time
-    /// ~5 GB model download. Stronger reasoning than Gemma 4 E2B.
+    /// Qwen 3 4B via MLX Swift, on-device — requires a one-time
+    /// ~2.3 GB model download. Fits comfortably on iPhone 15 (6 GB RAM).
     /// Progress surfaces as `ChatDelta.modelLoading`.
     case qwen
 }

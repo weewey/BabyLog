@@ -15,11 +15,10 @@ protocol QwenMLXModelLoader: Sendable {
     ) async throws -> ModelContainer
 }
 
-/// Production loader. Uses `LLMModelFactory.shared` (the pattern from the
-/// mlx-swift-examples reference) with a custom `HubClient` configured for
-/// large-shard timeouts. First call triggers a ~5 GB download;
-/// subsequent calls reuse the cached weights on disk.
-///
+/// Production loader. Uses `LLMModelFactory.shared` with a registered
+/// `LLMRegistry` configuration. Qwen3 4B 4-bit (~2.3 GB) fits comfortably
+/// within iPhone 15's 6 GB RAM budget; the 9B variant (~5 GB) caused OOM
+/// crashes on devices with ≤6 GB RAM.
 struct LiveQwenMLXModelLoader: QwenMLXModelLoader {
 
     nonisolated init() {}
@@ -27,25 +26,13 @@ struct LiveQwenMLXModelLoader: QwenMLXModelLoader {
     nonisolated func loadContainer(
         progress: @Sendable @escaping (Double) -> Void
     ) async throws -> ModelContainer {
-        // Limit GPU cache so MLX doesn't OOM on the 9B weights (ref: MLXChatExample).
+        // Limit GPU cache to prevent OOM during large model loads.
         Memory.cacheLimit = 20 * 1024 * 1024
 
-        let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest = 600        // 10 min idle ceiling per shard
-        config.timeoutIntervalForResource = 60 * 60   // 1 hour total per resource
-        config.waitsForConnectivity = true
-        let session = URLSession(configuration: config)
-        let hubClient = HubClient(session: session)
-
-        // mlx-community/Qwen3.5-9B-MLX-4bit is not in LLMRegistry, so we
-        // use ModelConfiguration(id:) directly as the reference does for
-        // community models outside the curated list.
-        let configuration = ModelConfiguration(id: "mlx-community/Qwen3.5-9B-MLX-4bit")
-
         return try await LLMModelFactory.shared.loadContainer(
-            from: #hubDownloader(hubClient),
+            from: #hubDownloader(),
             using: #huggingFaceTokenizerLoader(),
-            configuration: configuration
+            configuration: LLMRegistry.qwen3_4b_4bit
         ) { p in
             progress(p.fractionCompleted)
         }
