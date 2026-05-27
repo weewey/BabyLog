@@ -84,6 +84,12 @@ public struct ToolArguments: Sendable, Equatable {
         return try double(key)
     }
 
+    public func optionalBool(_ key: String) throws(ToolArgumentsError) -> Bool? {
+        guard let raw = values[key] else { return nil }
+        if case .null = raw { return nil }
+        return try bool(key)
+    }
+
     public func optionalDate(_ key: String) throws(ToolArgumentsError) -> Date? {
         guard let raw = values[key] else { return nil }
         if case .null = raw { return nil }
