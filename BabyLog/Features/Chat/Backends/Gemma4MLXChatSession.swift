@@ -277,17 +277,25 @@ final class Gemma4MLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
     /// messages into the shape MLX wants: `(history, lastUserPrompt)`.
     ///
     /// Tool-loop invariant: on iteration 2+ the messages array ends with
-    /// On-device models pay per-token in prefill latency. Exposing all
-    /// 25 tools to a 2B model wastes prompt budget on tools the user
-    /// rarely invokes via chat (e.g. delete/update growth measurements).
-    /// Keep only the high-traffic tools: create + list for feeds/diapers,
-    /// the pre-computed summary, and pumping CRUD.
+    /// Tools exposed to the on-device Gemma 4 model. Tools are rendered
+    /// in compact one-line form (~15 tokens each) rather than full JSON
+    /// schema (~200 tokens each), keeping prefill fast. Full CRUD is
+    /// included — edit/delete require the model to call listRecent* first
+    /// to obtain a valid id, which the system prompt enforces.
     private static let onDeviceToolAllowlist: Set<String> = [
-        "createFeedLog", "listRecentFeedLogs", "getTodayFeedSummary",
-        "createDiaperLog", "listRecentDiaperLogs",
-        "createPumpingSession", "listRecentPumpingSessions",
-        "createGrowthMeasurement",
-        "createMilestone",
+        // Feed logs
+        "createFeedLog", "updateFeedLog", "deleteFeedLog",
+        "listRecentFeedLogs", "getTodayFeedSummary",
+        // Diaper logs
+        "createDiaperLog", "updateDiaperLog", "deleteDiaperLog",
+        "listRecentDiaperLogs",
+        // Pumping sessions
+        "createPumpingSession", "updatePumpingSession", "deletePumpingSession",
+        "listRecentPumpingSessions",
+        // Growth measurements
+        "createGrowthMeasurement", "updateGrowthMeasurement", "deleteGrowthMeasurement",
+        // Milestones
+        "createMilestone", "updateMilestone", "deleteMilestone",
     ]
 
     static func filterToolsForOnDevice(_ tools: [any ChatTool]) -> [any ChatTool] {
