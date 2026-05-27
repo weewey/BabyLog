@@ -118,7 +118,7 @@ public final class ChatViewModel {
     public init(
         factory: ChatSessionFactory,
         preferenceStore: ChatBackendPreferenceStore = UserDefaultsChatBackendStore(),
-        defaultBackend: ChatBackend = .qwen,
+        defaultBackend: ChatBackend = .gemma,
         tools: ToolRegistry = ToolRegistry([]),
         speechRecognizer: (any SpeechRecognizing)? = nil
     ) {

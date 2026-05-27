@@ -95,41 +95,60 @@ public struct ChatEmptyStateSummary: Sendable, Equatable {
         lastFeed: LastFeed?,
         diapersEnabled: Bool = true
     ) -> [ChatSuggestion] {
+        _ = now
         _ = calendar
         _ = lastFeed
         _ = todayFeedCount
 
-        let timeFmt = DateFormatter()
-        timeFmt.dateFormat = "h:mm a"
-        timeFmt.locale = Locale(identifier: "en_US_POSIX")
-        timeFmt.timeZone = .current
-        let at = timeFmt.string(from: now)
-
         var chips: [ChatSuggestion] = [
-            .init(text: "60 ml feed at \(at)", slug: "feed60", autoSend: false),
-            .init(text: "20 min pump at \(at)", slug: "pump20", autoSend: false),
+            .init(template: "60 ml feed at {time}", slug: "feed60", autoSend: false),
+            .init(template: "20 min pump at {time}", slug: "pump20", autoSend: false),
         ]
         if diapersEnabled {
             chips += [
-                .init(text: "Dirty diaper at \(at)", slug: "diaperDirty", autoSend: false),
-                .init(text: "Wet diaper at \(at)", slug: "diaperWet", autoSend: false),
+                .init(template: "Dirty diaper at {time}", slug: "diaperDirty", autoSend: false),
+                .init(template: "Wet diaper at {time}", slug: "diaperWet", autoSend: false),
             ]
         }
-        chips.append(.init(text: "Today's total", slug: "feedTotal", autoSend: true))
+        chips.append(.init(template: "Today's total", slug: "feedTotal", autoSend: true))
         return chips
+    }
+
+    /// Format a `Date` into the short time string used in chip labels
+    /// (e.g. "3:45 PM"). Kept internal so templates resolve consistently.
+    static func shortTime(from date: Date) -> String {
+        let fmt = DateFormatter()
+        fmt.dateFormat = "h:mm a"
+        fmt.locale = Locale(identifier: "en_US_POSIX")
+        fmt.timeZone = .current
+        return fmt.string(from: date)
     }
 }
 
 public struct ChatSuggestion: Sendable, Hashable {
-    public let text: String
+    /// Text template. May contain `{time}` which is replaced with the
+    /// current clock time when `resolvedText(now:)` is called. Chips
+    /// without `{time}` (e.g. "Today's total") are returned as-is.
+    public let template: String
     public let slug: String
     /// Write-intent chips populate the composer for review; read-only
     /// chips auto-send on tap.
     public let autoSend: Bool
 
-    public init(text: String, slug: String, autoSend: Bool) {
-        self.text = text
+    public init(template: String, slug: String, autoSend: Bool) {
+        self.template = template
         self.slug = slug
         self.autoSend = autoSend
+    }
+
+    /// Resolve the chip text at the given moment. Call this at tap time
+    /// (not at view load time) so the timestamp reflects when the user
+    /// actually taps, not when the page loaded.
+    public func resolvedText(now: Date) -> String {
+        guard template.contains("{time}") else { return template }
+        return template.replacingOccurrences(
+            of: "{time}",
+            with: ChatEmptyStateSummary.shortTime(from: now)
+        )
     }
 }

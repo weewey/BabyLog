@@ -68,7 +68,7 @@ struct ChatTabView: View {
         .accessibilityIdentifier("chatTabRoot")
         .onAppear {
             if viewModel.selectedBackend == .apple {
-                viewModel.switchBackend(.qwen)
+                viewModel.switchBackend(.gemma)
             }
         }
     }
@@ -277,7 +277,8 @@ struct ChatTabView: View {
             HStack(spacing: 8) {
                 ForEach(suggestionPrompts, id: \.slug) { prompt in
                     Button {
-                        viewModel.input = prompt.text
+                        // Resolve timestamp at tap time, not at page-load time.
+                        viewModel.input = prompt.resolvedText(now: Date())
                         if prompt.autoSend {
                             viewModel.send()
                             inputFocused = false
@@ -288,7 +289,7 @@ struct ChatTabView: View {
                         HStack(spacing: 6) {
                             chipIcon(for: prompt.slug)
                                 .font(.footnote.weight(.medium))
-                            Text(prompt.text)
+                            Text(prompt.resolvedText(now: Date()))
                                 .font(.footnote.weight(.medium))
                                 .lineLimit(1)
                         }
@@ -301,7 +302,7 @@ struct ChatTabView: View {
                     .buttonStyle(.plain)
                     .disabled(viewModel.isStreaming)
                     .opacity(viewModel.isStreaming ? 0.5 : 1)
-                    .accessibilityLabel(prompt.text)
+                    .accessibilityLabel(prompt.resolvedText(now: Date()))
                     .accessibilityHint(
                         prompt.autoSend
                             ? "Sends this message right away."
@@ -510,12 +511,12 @@ struct ChatTabView: View {
                 Label(backendTitle(viewModel.selectedBackend), systemImage: "brain.head.profile")
             }
             .accessibilityLabel("Chat backend picker, \(backendTitle(viewModel.selectedBackend))")
-            .accessibilityHint("Tap to switch between Qwen and Gemma backends")
+            .accessibilityHint("Tap to switch between Apple and Gemma backends")
             .accessibilityIdentifier("chatBackendMenu")
         }
     }
 
-    private var visibleBackends: [ChatBackend] { [.qwen, .gemma] }
+    private var visibleBackends: [ChatBackend] { [.gemma] }
 
     private func backendTitle(_ backend: ChatBackend) -> String {
         switch backend {
