@@ -102,7 +102,7 @@ public struct ChatEmptyStateSummary: Sendable, Equatable {
 
         var chips: [ChatSuggestion] = [
             .init(template: "60 ml feed at {time}", slug: "feed60", autoSend: false),
-            .init(template: "20 min pump at {time}", slug: "pump20", autoSend: false),
+            .init(template: "20 min pump · 150 ml at {time}", slug: "pump20", autoSend: false),
         ]
         if diapersEnabled {
             chips += [

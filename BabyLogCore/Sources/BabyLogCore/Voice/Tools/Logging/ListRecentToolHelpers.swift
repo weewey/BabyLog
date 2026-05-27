@@ -14,10 +14,15 @@ enum ListRecentToolHelpers {
         return raw
     }
 
-    /// ISO8601 internet date-time (no fractional seconds) in UTC. Matches
-    /// the format `ToolArguments.parseISO8601` round-trips cleanly.
+    /// Human-readable date-time in the device's local timezone, e.g.
+    /// "May 27, 9:31 AM". Used in tool-result strings the AI reads back
+    /// to the user, so local time is always correct and unambiguous.
+    /// Note: tool *arguments* (input) still use ISO8601 UTC via
+    /// `ToolArguments.parseISO8601` — this is output-only.
     static func formatTimestamp(_ date: Date) -> String {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime]
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d, h:mm a"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = .current
         return formatter.string(from: date)
     }}

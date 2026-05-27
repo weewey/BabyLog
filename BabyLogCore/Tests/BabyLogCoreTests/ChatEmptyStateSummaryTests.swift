@@ -135,7 +135,7 @@ final class ChatEmptyStateSummaryTests: XCTestCase {
         )
         let pump = suggestions.first { $0.slug == "pump20" }
         XCTAssertNotNil(pump)
-        XCTAssertTrue(pump?.resolvedText(now: now).hasPrefix("20 min pump at ") ?? false, "Pump chip should include time")
+        XCTAssertTrue(pump?.resolvedText(now: now).hasPrefix("20 min pump · 150 ml at ") ?? false, "Pump chip should include volume and time")
         XCTAssertFalse(pump?.autoSend ?? true, "Pump chip should fill composer, not auto-send")
     }
 }
