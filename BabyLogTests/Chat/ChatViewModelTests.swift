@@ -146,6 +146,34 @@ final class ChatViewModelTests: XCTestCase {
         XCTAssertEqual(vm.messages.last?.isStreaming, false)
     }
 
+    func test_suspendForBackground_cancelsInFlightStreaming() async {
+        // Long-running on-device-style stream. If this keeps generating
+        // after the app backgrounds, MLX submits Metal command buffers that
+        // iOS fails once suspended → uncatchable C++ throw → SIGABRT.
+        let vm = makeVM(script: .tokens(
+            Array(repeating: "x", count: 200),
+            perTokenDelay: .milliseconds(20)
+        ))
+        vm.input = "q"
+        vm.send()
+        try? await Task.sleep(for: .milliseconds(30))
+        XCTAssertTrue(vm.isStreaming)
+
+        vm.suspendForBackground()
+
+        XCTAssertFalse(vm.isStreaming)
+        XCTAssertEqual(vm.messages.last?.isStreaming, false)
+    }
+
+    func test_suspendForBackground_whenIdle_isNoOp() {
+        let vm = makeVM()
+
+        vm.suspendForBackground()
+
+        XCTAssertFalse(vm.isStreaming)
+        XCTAssertTrue(vm.messages.isEmpty)
+    }
+
     func test_switchBackend_persistsToStore() async {
         let store = InMemoryStore()
         let vm = makeVM(store: store)

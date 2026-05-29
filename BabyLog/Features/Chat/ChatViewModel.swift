@@ -208,6 +208,22 @@ public final class ChatViewModel {
         currentSession = nil
     }
 
+    /// Stop any in-flight generation when the app leaves the foreground.
+    ///
+    /// On-device backends (Gemma 4 via MLX) submit Metal command buffers
+    /// while generating. Once the app is backgrounded or the device locks,
+    /// iOS fails those command buffers; MLX's completion handler then throws
+    /// a C++ exception on `com.Metal.CompletionQueueDispatch` — outside any
+    /// Swift `do/catch` — which terminates the process with `SIGABRT`.
+    /// Driven from the scene-phase `.inactive`/`.background` transition, this
+    /// cancels generation while the app is *still* foreground-allowed, so no
+    /// new command buffers are submitted into the backgrounded state. No-op
+    /// when nothing is streaming.
+    public func suspendForBackground() {
+        guard isStreaming else { return }
+        cancel()
+    }
+
     public func switchBackend(_ backend: ChatBackend) {
         guard backend != selectedBackend else { return }
         if isStreaming {
