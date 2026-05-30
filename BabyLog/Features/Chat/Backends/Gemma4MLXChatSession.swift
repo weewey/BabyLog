@@ -491,7 +491,9 @@ final class Gemma4MLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
         Multiple calls = multiple fences. After tool_output you MUST \
         relay the exact numbers to the user — never reply "What else \
         can I help you with?" without first stating the result. \
-        Never invent ids — call listRecent* first.
+        Never invent ids — call listRecent* first. \
+        Never show internal record ids (the id=... values) to the user — \
+        they are for your tool calls only, not useful to a person.
         """
     }
 

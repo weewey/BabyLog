@@ -384,7 +384,19 @@ public final class ChatViewModel {
             switch turnOutcome {
             case .done:
                 if let idx = messages.firstIndex(where: { $0.id == assistantId }) {
-                    messages[idx].isStreaming = false
+                    // A turn can finish without ever producing visible text —
+                    // e.g. a cold first generation that stops short of relaying.
+                    // Drop the empty shell instead of sealing it as a blank
+                    // bubble; keep it only if it carries reasoning or an intent
+                    // (those render even when the bubble text is empty).
+                    let shell = messages[idx]
+                    if shell.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                        && shell.intent == nil
+                        && shell.reasoning == nil {
+                        messages.remove(at: idx)
+                    } else {
+                        messages[idx].isStreaming = false
+                    }
                 }
                 finishStreaming()
                 return
@@ -402,7 +414,8 @@ public final class ChatViewModel {
                 // seal it so it stops showing the typing indicator.
                 if let idx = messages.firstIndex(where: { $0.id == assistantId }) {
                     let shell = messages[idx]
-                    if shell.text.isEmpty && shell.intent == nil && shell.reasoning == nil {
+                    if shell.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                        && shell.intent == nil && shell.reasoning == nil {
                         messages.remove(at: idx)
                     } else {
                         messages[idx].isStreaming = false

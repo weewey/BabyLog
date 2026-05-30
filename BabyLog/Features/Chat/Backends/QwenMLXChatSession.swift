@@ -443,6 +443,7 @@ final class QwenMLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
             Multiple calls = multiple envelopes back to back.
             After receiving a <tool_response>, relay the exact numbers to the user.
             Never invent IDs — call listRecent* first when you need one.
+            Never show internal record ids (the id=... values) to the user — they are for your tool calls only, not useful to a person.
             """
         }
         return base

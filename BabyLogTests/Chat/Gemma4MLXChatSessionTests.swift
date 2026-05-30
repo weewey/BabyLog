@@ -529,6 +529,14 @@ final class Gemma4MLXChatSessionTests: XCTestCase {
         XCTAssertTrue(prompt.contains("loggedAt"))
     }
 
+    func test_gemmaSystemPrompt_instructsNotToSurfaceIdsToUser() {
+        let prompt = Gemma4MLXChatSession.gemmaSystemPrompt(today: today, tools: [])
+        XCTAssertTrue(
+            prompt.contains("Never show internal record ids"),
+            "prompt must tell the model not to surface internal ids to the user"
+        )
+    }
+
     func test_gemmaSystemPrompt_dropsLegacyToolCallTagSyntax() {
         let prompt = Gemma4MLXChatSession.gemmaSystemPrompt(today: today, tools: [])
         XCTAssertFalse(prompt.contains("<|tool_call>"))

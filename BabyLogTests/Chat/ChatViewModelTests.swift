@@ -165,6 +165,23 @@ final class ChatViewModelTests: XCTestCase {
         XCTAssertEqual(vm.messages.last?.isStreaming, false)
     }
 
+    func test_emptyAssistantTurn_isRemoved_notLeftAsEmptyBubble() async {
+        // A turn that completes with no tokens (e.g. a cold first turn that
+        // fails to relay) must not leave a blank assistant bubble on screen.
+        let vm = makeVM(script: .tokens([], perTokenDelay: .milliseconds(0)))
+        vm.input = "hi"
+
+        vm.send()
+        await waitUntil { !vm.isStreaming }
+
+        XCTAssertFalse(
+            vm.messages.contains { $0.role == .assistant && $0.text.isEmpty },
+            "empty assistant placeholder should be removed, not sealed as a blank bubble"
+        )
+        XCTAssertEqual(vm.messages.count, 1)
+        XCTAssertEqual(vm.messages.first?.role, .user)
+    }
+
     func test_suspendForBackground_whenIdle_isNoOp() {
         let vm = makeVM()
 

@@ -630,7 +630,7 @@ private struct ChatMessageRow: View {
 
     @ViewBuilder
     private var bubbleContent: some View {
-        if message.text.isEmpty && message.isStreaming {
+        if message.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && message.isStreaming {
             TypingIndicator()
         } else {
             VStack(alignment: .leading, spacing: 10) {
@@ -677,16 +677,15 @@ private struct ChatMessageRow: View {
         message.role == .user ? .trailing : .leading
     }
 
-    /// Hide the bubble entirely when this assistant message is a
-    /// reasoning-only shell (no text, no streaming indicator, no intent).
-    /// Otherwise the bubble renders as an empty grey blob below the
-    /// `ReasoningDisclosure`.
+    /// Hide the bubble entirely when a finished assistant message has no
+    /// visible text — e.g. a reasoning-only or intent-only shell, or a turn
+    /// that produced only whitespace. Reasoning (`ReasoningDisclosure`) and
+    /// intent (`IntentConfirmationCard`) render independently above/below, so
+    /// the bubble itself would just be an empty grey blob.
     private var shouldSuppressBubble: Bool {
         message.role == .assistant
-            && message.text.isEmpty
+            && message.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && !message.isStreaming
-            && message.reasoning != nil
-            && message.intent == nil
     }
 
     private var bubbleColor: Color {
