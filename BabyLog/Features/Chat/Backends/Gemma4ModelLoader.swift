@@ -29,8 +29,10 @@ struct LiveGemma4ModelLoader: Gemma4ModelLoader {
     nonisolated func loadContainer(
         progress: @Sendable @escaping (Double) -> Void
     ) async throws -> ModelContainer {
-        // Limit GPU cache to prevent OOM (ref: MLXChatExample/MLXService).
-        Memory.cacheLimit = 20 * 1024 * 1024
+        // Cap GPU cache + memory limit. The default memoryLimit (1.5x the
+        // device's recommended working set) overshoots the GPU ceiling on iOS
+        // and crashes mid-generation — see MLXMemoryTuning.
+        MLXMemoryTuning.apply()
 
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 600        // 10 min idle ceiling per shard

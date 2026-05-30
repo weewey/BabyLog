@@ -26,8 +26,10 @@ struct LiveQwenMLXModelLoader: QwenMLXModelLoader {
     nonisolated func loadContainer(
         progress: @Sendable @escaping (Double) -> Void
     ) async throws -> ModelContainer {
-        // Limit GPU cache to prevent OOM during large model loads.
-        Memory.cacheLimit = 20 * 1024 * 1024
+        // Cap GPU cache + memory limit. The default memoryLimit (1.5x the
+        // device's recommended working set) overshoots the GPU ceiling on iOS
+        // and crashes mid-generation — see MLXMemoryTuning.
+        MLXMemoryTuning.apply()
 
         return try await LLMModelFactory.shared.loadContainer(
             from: #hubDownloader(),
