@@ -130,7 +130,12 @@ final class QwenMLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
         }
     }
 
-    func cancel() { Self.currentInFlight()?.cancel() }
+    func cancel() {
+        Self.currentInFlight()?.cancel()
+        // Drain the GPU so any already-committed command buffer completes while
+        // the app is still foreground-eligible — see MLXMemoryTuning.drainGPU.
+        MLXMemoryTuning.drainGPU()
+    }
 
     // MARK: - Load + progress
 

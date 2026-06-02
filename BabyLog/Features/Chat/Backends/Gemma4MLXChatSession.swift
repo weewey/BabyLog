@@ -160,6 +160,10 @@ final class Gemma4MLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
 
     func cancel() {
         Self.currentInFlight()?.cancel()
+        // Drain the GPU so any already-committed command buffer completes while
+        // the app is still foreground-eligible. Without this, a buffer in flight
+        // when the screen locks fails and MLX rethrows it uncatchably (SIGABRT).
+        MLXMemoryTuning.drainGPU()
     }
 
     // MARK: - Load + progress

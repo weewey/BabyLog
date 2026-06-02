@@ -33,6 +33,20 @@ enum MLXMemoryTuning {
         return Int(scaled)
     }
 
+    /// Block until the default GPU stream has finished all queued work.
+    ///
+    /// Call from the scene-phase resign handler (via `ChatSession.cancel()`)
+    /// **while the app is still foreground-eligible** (`.inactive`, before the
+    /// lock/background actually revokes GPU access). An already-committed Metal
+    /// command buffer then completes cleanly instead of failing once the GPU is
+    /// revoked — which is what otherwise throws uncatchably on
+    /// `com.Metal.CompletionQueueDispatch` and aborts the process. MLX guards
+    /// `synchronize()` with its internal eval lock, so this is safe to call from
+    /// the main thread even while a generation task is mid-flight.
+    static func drainGPU() {
+        Stream.gpu.synchronize()
+    }
+
     /// Apply the cache + memory limits to MLX's global GPU allocator. Call once
     /// at model-load time (idempotent — safe to call on every load).
     static func apply() {

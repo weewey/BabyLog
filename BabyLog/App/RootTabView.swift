@@ -276,16 +276,18 @@ struct RootTabView: View {
         }
         .onChange(of: scenePhase) { _, phase in
             switch phase {
+            case .inactive:
+                // `.inactive` is the *earliest* resign signal (it lands before
+                // a lock/background actually revokes GPU access). Cancel here
+                // and drain the GPU — see ChatViewModel.suspendForBackground —
+                // so no MLX command buffer is in flight when the lock revokes
+                // the GPU (which otherwise crashes uncatchably). Trade-off:
+                // pulling Control Center / a banner mid-reply also cancels it.
+                chatViewModel.suspendForBackground()
             case .background:
-                // Stop on-device (MLX/Metal) generation when the app leaves
-                // the foreground — GPU command buffers that complete while
-                // backgrounded throw an uncatchable C++ exception and crash
-                // the app. Cancelled here (not on `.inactive`) so transient
-                // foreground interruptions — Control Center, notification
-                // banners, the app switcher — don't kill an in-flight reply.
                 chatViewModel.suspendForBackground()
                 BackgroundTaskRegistrar.scheduleRefresh()
-            case .active, .inactive:
+            case .active:
                 break
             @unknown default:
                 break
