@@ -5,7 +5,12 @@ struct AppointmentTabView: View {
 
     @State var viewModel: MedicalAppointmentViewModel
     var onSync: (() async -> Void)?
+    /// Builds a fresh visit-summary view model each time the sheet opens so it
+    /// re-fetches the latest records. `nil` hides the "Prep for visit" action
+    /// (e.g. in previews).
+    var makeVisitSummary: (() -> VisitSummaryViewModel)?
     @State private var showForm = false
+    @State private var showVisitSummary = false
 
     var body: some View {
         NavigationStack {
@@ -35,6 +40,17 @@ struct AppointmentTabView: View {
             .navigationTitle("Appointments")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                if makeVisitSummary != nil {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button {
+                            showVisitSummary = true
+                        } label: {
+                            Label("Prep for visit", systemImage: "doc.text.magnifyingglass")
+                        }
+                        .accessibilityLabel("Prepare a summary for the pediatrician visit")
+                        .accessibilityIdentifier("appointmentPrepVisitButton")
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         showForm = true
@@ -58,6 +74,15 @@ struct AppointmentTabView: View {
                         }
                 }
                 .tint(Theme.appointment)
+            }
+            .sheet(isPresented: $showVisitSummary) {
+                if let makeVisitSummary {
+                    VisitSummaryView(
+                        viewModel: makeVisitSummary(),
+                        onDismiss: { showVisitSummary = false }
+                    )
+                    .tint(Theme.appointment)
+                }
             }
             .task { await viewModel.refreshEntries() }
             .refreshable {

@@ -228,7 +228,18 @@ struct RootTabView: View {
                             clock: SystemClock(),
                             calendar: EventKitCalendarSync()
                         ),
-                        onSync: {}
+                        onSync: {},
+                        makeVisitSummary: { [context] in
+                            VisitSummaryViewModel(
+                                profileRepository: SwiftDataChildProfileRepository(context: context),
+                                feedRepository: sync.makeFeedLogRepository(),
+                                diaperRepository: sync.makeDiaperLogRepository(),
+                                growthRepository: sync.makeGrowthMeasurementRepository(),
+                                pumpingRepository: sync.makePumpingSessionRepository(),
+                                milestoneRepository: sync.makeMilestoneRepository(),
+                                appointmentRepository: sync.makeMedicalAppointmentRepository()
+                            )
+                        }
                     )
                 },
                 milestonesDestination: {
