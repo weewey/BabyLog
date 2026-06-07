@@ -555,10 +555,6 @@ private struct ChatMessageRow: View {
                 if !shouldSuppressBubble {
                     bubble
                 }
-                if let intent = message.intent {
-                    IntentConfirmationCard(intent: intent)
-                        .padding(.top, 4)
-                }
                 if isLastInGroup {
                     Text(timestampLabel)
                         .font(.caption2)
@@ -969,78 +965,12 @@ private struct StatPill: View {
 
 // MARK: - Intent card
 
-private struct IntentConfirmationCard: View {
-    let intent: ToolUse
-
-    var body: some View {
-        HStack(spacing: 10) {
-            Image(systemName: icon)
-                .foregroundStyle(.tint)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.subheadline.weight(.semibold))
-                Text(subtitle)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            Spacer()
-            Button("Confirm") {
-                // TODO(chat-merge): hand off to the matching feature repo.
-                print("[chat] intent confirm tapped: \(intent)")
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.small)
-            .accessibilityLabel("Confirm \(title)")
-        }
-        .padding(10)
-        .background(Color(.tertiarySystemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .accessibilityIdentifier("chatIntentCard")
-    }
-
-    private var icon: String {
-        switch intent {
-        case .feed: return "waterbottle.fill"
-        case .diaper: return "drop.fill"
-        case .growth: return "chart.line.uptrend.xyaxis"
-        case .appointment: return "calendar"
-        case .milestone: return "star.fill"
-        case .unknown: return "questionmark.circle"
-        }
-    }
-
-    private var title: String {
-        switch intent {
-        case .feed: return "Log feed"
-        case .diaper: return "Log diaper"
-        case .growth: return "Log growth"
-        case .appointment: return "Add appointment"
-        case .milestone: return "Log milestone"
-        case .unknown: return "Not sure"
-        }
-    }
-
-    private var subtitle: String {
-        switch intent {
-        case let .feed(d):
-            return [d.volumeMl.map { "\($0) ml" }, d.source.map { "\($0)" }]
-                .compactMap { $0 }.joined(separator: " · ")
-        case let .diaper(d): return d.type.map { "\($0)" } ?? "tap to confirm"
-        case let .growth(d): return d.weightGrams.map { "\($0) g" } ?? "tap to confirm"
-        case let .appointment(d): return d.title ?? "tap to confirm"
-        case let .milestone(d): return d.title ?? "tap to confirm"
-        case let .unknown(reason): return reason
-        }
-    }
-}
-
 // MARK: - Preview
 
 #Preview {
     let factory = FakeChatSessionFactory { _ in
-        .tokensWithIntent(
+        .tokens(
             ["Sure ", "— ", "logging ", "a ", "120 ", "ml ", "bottle."],
-            intent: .feed(FeedDraft(volumeMl: 120, source: .bottle)),
             perTokenDelay: .milliseconds(40)
         )
     }
