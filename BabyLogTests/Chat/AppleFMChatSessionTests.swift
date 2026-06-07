@@ -141,6 +141,41 @@ final class AppleFMChatSessionTests: XCTestCase {
         XCTAssertEqual(deltas, [.token("hi"), .token(" there"), .done])
     }
 
+    private struct StubTool: ChatTool, @unchecked Sendable {
+        let name: String
+        let description = "stub"
+        let inputSchema = ToolInputSchema(properties: [], required: [])
+        let requiresConfirmation = false
+        func execute(arguments: ToolArguments) async throws -> ToolResult { ToolResult(content: "ok") }
+    }
+
+    func test_curatedTools_dropsUpdateAndDeleteTools() {
+        let tools: [any ChatTool] = [
+            StubTool(name: "createFeedLog"),
+            StubTool(name: "updateFeedLog"),
+            StubTool(name: "deleteFeedLog"),
+            StubTool(name: "listRecentFeedLogs"),
+            StubTool(name: "getTodayFeedSummary"),
+        ]
+
+        let names = AppleFMChatSession.curatedTools(tools).map(\.name)
+
+        XCTAssertEqual(names, ["createFeedLog", "listRecentFeedLogs", "getTodayFeedSummary"])
+    }
+
+    func test_renderTranscript_trimsToRecentMessages() {
+        // 30 user messages — only the most recent ones should survive.
+        let messages = (0..<30).map { ChatMessage(role: .user, text: "msg\($0)") }
+
+        let transcript = AppleFMChatSession.renderTranscript(messages)
+
+        XCTAssertFalse(transcript.contains("msg0"), "oldest message should be trimmed")
+        XCTAssertTrue(transcript.contains("msg29"), "newest message should be kept")
+        // Cap honored: at most maxTranscriptMessages "User:" lines.
+        let userLines = transcript.components(separatedBy: "\n").filter { $0.hasPrefix("User:") }
+        XCTAssertLessThanOrEqual(userLines.count, AppleFMChatSession.maxTranscriptMessages)
+    }
+
     func test_executesToolsInternally_isTrue() {
         let session = AppleFMChatSession(session: FakeLanguageModelSession(script: .empty))
 

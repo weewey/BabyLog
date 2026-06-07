@@ -193,18 +193,26 @@ func run() async {
     var results: [[String: Any]] = []
     var toolHits = 0, paramHits = 0, toolAnyHits = 0
 
+    // Mirror AppleFMChatSession.curatedTools: drop update*/delete* tools.
+    let curatedDefs = toolDefs.filter { !$0.name.hasPrefix("update") && !$0.name.hasPrefix("delete") }
+    FileHandle.standardError.write("tools exposed: \(curatedDefs.count)/\(toolDefs.count)\n".data(using: .utf8)!)
+
     for (i, row) in rows.enumerated() {
         let recorder = CallRecorder()
-        let tools: [any Tool] = toolDefs.compactMap { def in
+        let tools: [any Tool] = curatedDefs.compactMap { def in
             guard let schema = try? makeSchema(def) else { return nil }
             return EvalTool(name: def.name, description: def.description, parameters: schema, recorder: recorder)
         }
         let session = LanguageModelSession(tools: tools, instructions: instructions)
+        session.prewarm()
 
         var replyText = ""
         var errored: String? = nil
         do {
-            let resp = try await session.respond(to: row.user)
+            let resp = try await session.respond(
+                to: row.user,
+                options: GenerationOptions(maximumResponseTokens: 512)
+            )
             replyText = resp.content
         } catch {
             errored = "\(error)"

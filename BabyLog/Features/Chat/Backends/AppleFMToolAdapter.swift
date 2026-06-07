@@ -26,6 +26,13 @@ struct AppleFMToolAdapter: FoundationModels.Tool {
     var name: String { chatTool.name }
     var description: String { chatTool.description }
 
+    // NOTE: leave `includesSchemaInInstructions` at its default (`true`).
+    // Setting it `false` makes Apple FM stop calling tools entirely — it
+    // hallucinates success ("I've logged it") without invoking anything,
+    // silently dropping data. Context pressure is instead reduced by
+    // curating the tool set (see `AppleFMChatSession.curatedTools`) and
+    // trimming the transcript.
+
     init(
         chatTool: any ChatTool,
         emit: @escaping @Sendable (AppleFMEvent) -> Void

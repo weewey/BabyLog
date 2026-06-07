@@ -102,14 +102,15 @@ final class AppleFMChatSession: ChatSession, @unchecked Sendable {
         prompt: String,
         tools: [any ChatTool]
     ) -> AsyncThrowingStream<ChatDelta, any Error> {
-        AsyncThrowingStream { continuation in
+        let curated = Self.curatedTools(tools)
+        return AsyncThrowingStream { continuation in
             let upstream = makeUpstream()
             let task = Task {
                 var lastEmittedPrefix = ""
                 var receivedAnyText = false
                 var sawToolEvent = false
                 do {
-                    for try await event in upstream.streamEvents(prompt: prompt, tools: tools) {
+                    for try await event in upstream.streamEvents(prompt: prompt, tools: curated) {
                         try Task.checkCancellation()
                         switch event {
                         case let .text(snapshot):
@@ -156,8 +157,26 @@ final class AppleFMChatSession: ChatSession, @unchecked Sendable {
         activeTask = nil
     }
 
+    /// Keep at most the most recent N messages in the replayed transcript.
+    /// Apple FM's on-device context window is ~4k tokens, so an unbounded
+    /// history grows the prompt until generation throws
+    /// `.exceededContextWindowSize`. Older turns are dropped; recent ones
+    /// (including any in-flight tool calls/results) are what the model needs.
+    static let maxTranscriptMessages = 12
+
+    /// Tools exposed to Apple FM. The on-device model has a tight context
+    /// window and degrades when offered too many tools, so we omit the
+    /// `update*` / `delete*` editing tools (which it can't drive reliably
+    /// anyway — they need a list-to-get-id step). Create / list / summary
+    /// tools cover the common voice-logging path; edits stay available on
+    /// the Gemma backend and in the per-domain UI.
+    static func curatedTools(_ tools: [any ChatTool]) -> [any ChatTool] {
+        tools.filter { !$0.name.hasPrefix("update") && !$0.name.hasPrefix("delete") }
+    }
+
     static func renderTranscript(_ messages: [ChatMessage]) -> String {
-        let rendered = messages.compactMap { msg -> String? in
+        let trimmed = messages.suffix(maxTranscriptMessages)
+        let rendered = trimmed.compactMap { msg -> String? in
             // Render prior tool calls/results so a re-streamed transcript
             // carries the action context forward.
             if let entry = msg.toolEntry {
@@ -225,10 +244,16 @@ final class RealLanguageModelSession: LanguageModelSessionProtocol, @unchecked S
             } else {
                 session = LanguageModelSession(tools: adapters)
             }
+            // Warm the model assets so the first token arrives sooner.
+            session.prewarm()
+
+            // Cap the reply length: our confirmations are one sentence, so a
+            // tight budget keeps generation fast and leaves context headroom.
+            let options = GenerationOptions(maximumResponseTokens: 512)
 
             let task = Task {
                 do {
-                    for try await partial in session.streamResponse(to: prompt) {
+                    for try await partial in session.streamResponse(to: prompt, options: options) {
                         // `partial.content` is the cumulative generated text.
                         continuation.yield(.text(partial.content))
                     }
