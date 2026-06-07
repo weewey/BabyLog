@@ -102,7 +102,6 @@ final class AppleFMChatSession: ChatSession, @unchecked Sendable {
         prompt: String,
         tools: [any ChatTool]
     ) -> AsyncThrowingStream<ChatDelta, any Error> {
-        let curated = Self.curatedTools(tools)
         return AsyncThrowingStream { continuation in
             let upstream = makeUpstream()
             let task = Task {
@@ -110,7 +109,7 @@ final class AppleFMChatSession: ChatSession, @unchecked Sendable {
                 var receivedAnyText = false
                 var sawToolEvent = false
                 do {
-                    for try await event in upstream.streamEvents(prompt: prompt, tools: curated) {
+                    for try await event in upstream.streamEvents(prompt: prompt, tools: tools) {
                         try Task.checkCancellation()
                         switch event {
                         case let .text(snapshot):
@@ -164,15 +163,11 @@ final class AppleFMChatSession: ChatSession, @unchecked Sendable {
     /// (including any in-flight tool calls/results) are what the model needs.
     static let maxTranscriptMessages = 12
 
-    /// Tools exposed to Apple FM. The on-device model has a tight context
-    /// window and degrades when offered too many tools, so we omit the
-    /// `update*` / `delete*` editing tools (which it can't drive reliably
-    /// anyway — they need a list-to-get-id step). Create / list / summary
-    /// tools cover the common voice-logging path; edits stay available on
-    /// the Gemma backend and in the per-domain UI.
-    static func curatedTools(_ tools: [any ChatTool]) -> [any ChatTool] {
-        tools.filter { !$0.name.hasPrefix("update") && !$0.name.hasPrefix("delete") }
-    }
+    // Apple FM is given the full tool set (create / update / delete / list /
+    // summary) so it can edit and remove entries, not just create them.
+    // Context pressure from the larger tool payload is kept in check by
+    // trimming the transcript (below) and by softening late generation errors
+    // in `ChatViewModel.drain`.
 
     static func renderTranscript(_ messages: [ChatMessage]) -> String {
         let trimmed = messages.suffix(maxTranscriptMessages)

@@ -34,14 +34,22 @@ final class ChatViewModelTests: XCTestCase {
     private final class DeltaSession: ChatSession, @unchecked Sendable {
         let deltas: [ChatDelta]
         let executesToolsInternally: Bool
-        init(deltas: [ChatDelta], executesToolsInternally: Bool) {
+        /// When set, the stream finishes by throwing this after emitting all
+        /// deltas (simulates a late generation failure).
+        let throwAfter: (any Error)?
+        init(deltas: [ChatDelta], executesToolsInternally: Bool, throwAfter: (any Error)? = nil) {
             self.deltas = deltas
             self.executesToolsInternally = executesToolsInternally
+            self.throwAfter = throwAfter
         }
         func stream(_ text: String) -> AsyncThrowingStream<ChatDelta, any Error> {
             AsyncThrowingStream { continuation in
                 for delta in deltas { continuation.yield(delta) }
-                continuation.finish()
+                if let throwAfter {
+                    continuation.finish(throwing: throwAfter)
+                } else {
+                    continuation.finish()
+                }
             }
         }
         func cancel() {}
@@ -795,6 +803,56 @@ final class ChatViewModelTests: XCTestCase {
         let assistantText = vm.messages.first(where: { $0.role == .assistant })?.text
         XCTAssertEqual(assistantText, "Done!")
         XCTAssertFalse(vm.isStreaming)
+    }
+
+    func test_internalToolExecution_lateGenerationError_sealsInsteadOfErroring() async {
+        struct LateGenError: Error {}
+        // Tool ran + reply streamed, then generation throws (mirrors Apple FM's
+        // late token-generation GenerationError). The turn should seal with the
+        // partial reply and NOT surface an error modal.
+        let session = DeltaSession(
+            deltas: [
+                .toolCall(id: "c", name: "spyTool", arguments: ToolArguments()),
+                .toolResult(id: "c", result: ToolResult(content: "summary")),
+                .token("Everything looks good!"),
+            ],
+            executesToolsInternally: true,
+            throwAfter: LateGenError()
+        )
+        let vm = ChatViewModel(
+            factory: DeltaFactory(make: { session }),
+            preferenceStore: InMemoryStore(),
+            tools: ToolRegistry([SpyTool()])
+        )
+        vm.input = "today's total"
+
+        vm.send()
+        await waitUntil { !vm.isStreaming }
+
+        XCTAssertNil(vm.error, "a late error after usable output must not surface a modal")
+        let assistantText = vm.messages.first(where: { $0.role == .assistant })?.text
+        XCTAssertEqual(assistantText, "Everything looks good!")
+    }
+
+    func test_internalToolExecution_earlyError_noOutput_stillSurfacesError() async {
+        struct EarlyError: Error {}
+        // Error before any usable output → user should still be told.
+        let session = DeltaSession(
+            deltas: [],
+            executesToolsInternally: true,
+            throwAfter: EarlyError()
+        )
+        let vm = ChatViewModel(
+            factory: DeltaFactory(make: { session }),
+            preferenceStore: InMemoryStore(),
+            tools: ToolRegistry([SpyTool()])
+        )
+        vm.input = "hi"
+
+        vm.send()
+        await waitUntil { !vm.isStreaming }
+
+        XCTAssertNotNil(vm.error, "an error with no produced output should surface")
     }
 
     func test_internalToolExecution_doneIsTerminalDespiteToolCall() async {

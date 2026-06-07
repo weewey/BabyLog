@@ -470,6 +470,10 @@ public final class ChatViewModel {
         executesToolsInternally: Bool
     ) async -> TurnOutcome {
         var sawToolCall = false
+        // Whether this turn produced anything usable (visible reply text or a
+        // completed tool result). Used to soften a late generation error into
+        // a normal completion — see the `catch` below.
+        var producedOutput = false
         // Maps a `.toolCall` id to its tool name so a backend-emitted
         // `.toolResult` (which carries only the id) can be recorded with the
         // right name. Only used when the backend executes tools internally.
@@ -480,6 +484,7 @@ public final class ChatViewModel {
                 switch delta {
                 case let .token(chunk):
                     modelLoadProgress = nil
+                    if !chunk.isEmpty { producedOutput = true }
                     appendToken(chunk, to: assistantId)
                 case let .intent(intent):
                     modelLoadProgress = nil
@@ -515,6 +520,7 @@ public final class ChatViewModel {
                 case let .toolResult(id, result):
                     if executesToolsInternally {
                         // Pair the backend-executed result with its call card.
+                        producedOutput = true
                         appendToolResultMessage(
                             id: id,
                             name: toolNamesById[id] ?? "",
@@ -535,6 +541,15 @@ public final class ChatViewModel {
         } catch is CancellationError {
             return .cancelled
         } catch {
+            // Apple FM (which runs tools internally) can throw a late
+            // `token-generation` GenerationError *after* the tool already ran
+            // and a usable reply streamed — the work succeeded, only the
+            // tail-end generation failed. Seal what we have instead of
+            // alarming the user with an error modal. Hard-fail only when the
+            // turn produced nothing usable.
+            if executesToolsInternally && producedOutput {
+                return .done
+            }
             return .failed(.streamFailed(String(describing: error)))
         }
     }
