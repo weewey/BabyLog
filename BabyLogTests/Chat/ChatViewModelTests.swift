@@ -191,6 +191,61 @@ final class ChatViewModelTests: XCTestCase {
         XCTAssertTrue(vm.messages.isEmpty)
     }
 
+    // MARK: - Idle timer (prevent auto-lock during on-device generation)
+
+    /// Records the most recent `isIdleTimerDisabled` value the VM set, so we
+    /// can assert the screen is kept awake only while a reply streams.
+    @MainActor
+    private final class SpyIdleTimer: IdleTimerControlling {
+        var isIdleTimerDisabled: Bool = false
+    }
+
+    private func makeVM(
+        idleTimer: any IdleTimerControlling,
+        script: FakeChatSession.Script
+    ) -> ChatViewModel {
+        ChatViewModel(
+            factory: ScriptedFactory(script: script),
+            preferenceStore: InMemoryStore(),
+            idleTimer: idleTimer
+        )
+    }
+
+    func test_idleTimer_disabledWhileStreaming_restoredWhenDone() async {
+        let timer = SpyIdleTimer()
+        let vm = makeVM(
+            idleTimer: timer,
+            script: .tokens(Array(repeating: "x", count: 40), perTokenDelay: .milliseconds(10))
+        )
+        vm.input = "q"
+
+        vm.send()
+        try? await Task.sleep(for: .milliseconds(20))
+
+        XCTAssertTrue(vm.isStreaming)
+        XCTAssertTrue(timer.isIdleTimerDisabled, "screen should stay awake while a reply streams")
+
+        await waitUntil { !vm.isStreaming }
+        XCTAssertFalse(timer.isIdleTimerDisabled, "idle timer should be restored once streaming ends")
+    }
+
+    func test_idleTimer_restoredOnSuspendForBackground() async {
+        let timer = SpyIdleTimer()
+        let vm = makeVM(
+            idleTimer: timer,
+            script: .tokens(Array(repeating: "x", count: 200), perTokenDelay: .milliseconds(20))
+        )
+        vm.input = "q"
+
+        vm.send()
+        try? await Task.sleep(for: .milliseconds(30))
+        XCTAssertTrue(timer.isIdleTimerDisabled)
+
+        vm.suspendForBackground()
+
+        XCTAssertFalse(timer.isIdleTimerDisabled, "backgrounding must re-enable auto-lock")
+    }
+
     func test_switchBackend_persistsToStore() async {
         let store = InMemoryStore()
         let vm = makeVM(store: store)

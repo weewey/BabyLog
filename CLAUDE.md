@@ -38,12 +38,13 @@ When you do pause for the owner, frame it as: "Here are the 2–3 options, here'
 
 The autonomous build pipeline is being stood up incrementally. Agents reading this file: use this section to know what exists, what doesn't, and what you can rely on. Update this section any time you complete one of the items below.
 
-**Last updated:** 2026-06-02 (lock-crash fix: cancel on .inactive + drain GPU before suspension)
+**Last updated:** 2026-06-07 (lock-crash mitigation: disable auto-lock while a reply streams)
 
 > **Progress-updates policy:** The `### ✅ Done` list below is **not** off-limits. Agents (managed or local) **must** append a bullet under `### ✅ Done` whenever they land a merged feature, infra change, or bootstrap step, and bump `**Last updated:**` to today's date in the same edit. Keep each bullet one line, prefix with the epic/issue number if applicable. Everything else in CLAUDE.md remains off-limits unless the owner says otherwise.
 
 ### ✅ Done
 
+- **Lock-during-generation crash — disable auto-lock while streaming** (2026-06-07): build 24 still `SIGABRT`'d on `com.Metal.CompletionQueueDispatch` with `isLocked=1` (crash report `BabyLog-2026-06-03-235320.ips`). Root cause confirmed structural, not a bug in the build-23/24 fix: when the screen locks mid-reply iOS revokes GPU access *before/while* our main-thread `.inactive` handler runs, so `drainGPU()` (`Stream.gpu.synchronize()`) can't help — it only *waits for* the in-flight buffer, which completes **with error**, and MLX rethrows from Metal's own completion-queue thread (off any Swift stack → uncatchable). Mitigation A (owner-approved, can't be fully killed app-side): `ChatViewModel` now keeps the screen awake while `isStreaming` via an injected `IdleTimerControlling` seam (`UIApplicationIdleTimer` in prod, `didSet` on `isStreaming` toggles it, restored on done/cancel/suspend). Kills the auto-lock trigger (phone set down, sleeps mid-reply — the common case); a deliberate power-button lock can still crash (only fully fixable MLX-side). 2 new `ChatViewModelTests`.
 - **Repo**: `weewey/BabyLog` private, `main` branch, local working copy at `/Users/yewwee/localdev/BabyLog/BabyLog`, all commits pushed to origin
 - **Xcode skeleton**: `BabyLog.xcodeproj` + `BabyLog/`, `BabyLogTests/`, `BabyLogUITests/` (default SwiftUI app template)
 - **Fastlane**: `fastlane/Fastfile` with `test` + `beta` lanes, `Gemfile` with `gem "fastlane"`

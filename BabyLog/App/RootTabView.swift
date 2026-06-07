@@ -137,7 +137,8 @@ struct RootTabView: View {
             factory: factory,
             preferenceStore: UserDefaultsChatBackendStore(defaults: suite),
             tools: tools,
-            speechRecognizer: recognizer
+            speechRecognizer: recognizer,
+            idleTimer: forceFake ? nil : UIApplicationIdleTimer()
         )
     }
 

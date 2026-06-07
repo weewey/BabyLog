@@ -9,6 +9,17 @@ public protocol ChatBackendPreferenceStore: Sendable {
     func set(_ value: String, forKey key: String)
 }
 
+/// Seam over `UIApplication.isIdleTimerDisabled` so the chat VM can keep the
+/// screen awake *only* while an on-device reply is streaming. Auto-lock during
+/// generation is a crash trigger: when the device sleeps mid-reply, iOS revokes
+/// GPU access, the in-flight Metal command buffer fails, and MLX rethrows the
+/// failure uncatchably on `com.Metal.CompletionQueueDispatch` (SIGABRT).
+/// Injected so tests assert the toggle without touching UIKit.
+@MainActor
+public protocol IdleTimerControlling: AnyObject {
+    var isIdleTimerDisabled: Bool { get set }
+}
+
 /// Thin wrapper around `UserDefaults.standard`. `nonisolated` + `Sendable`
 /// because `UserDefaults` itself is thread-safe.
 public struct UserDefaultsChatBackendStore: ChatBackendPreferenceStore {
@@ -63,7 +74,16 @@ public final class ChatViewModel {
     /// its own conversation.
     private var stashedMessages: [ChatBackend: [ChatMessage]] = [:]
     public var input: String = ""
-    public private(set) var isStreaming: Bool = false
+    public private(set) var isStreaming: Bool = false {
+        didSet {
+            guard isStreaming != oldValue else { return }
+            // Keep the screen awake while a reply streams so the phone can't
+            // auto-lock mid-generation (which crashes the on-device MLX
+            // backend). Restored the moment streaming ends — including via
+            // cancel / suspendForBackground, which both flip this to false.
+            idleTimer?.isIdleTimerDisabled = isStreaming
+        }
+    }
     public private(set) var selectedBackend: ChatBackend
     public private(set) var error: ChatViewModel.Error?
     /// `true` while a dictation session is actively feeding partial
@@ -103,6 +123,7 @@ public final class ChatViewModel {
     private let preferenceStore: ChatBackendPreferenceStore
     private let tools: ToolRegistry
     private let speechRecognizer: (any SpeechRecognizing)?
+    private let idleTimer: (any IdleTimerControlling)?
     private var currentSession: (any ChatSession)?
     private var streamTask: Task<Void, Never>?
     private var dictationTask: Task<Void, Never>?
@@ -120,12 +141,14 @@ public final class ChatViewModel {
         preferenceStore: ChatBackendPreferenceStore = UserDefaultsChatBackendStore(),
         defaultBackend: ChatBackend = .gemma,
         tools: ToolRegistry = ToolRegistry([]),
-        speechRecognizer: (any SpeechRecognizing)? = nil
+        speechRecognizer: (any SpeechRecognizing)? = nil,
+        idleTimer: (any IdleTimerControlling)? = nil
     ) {
         self.factory = factory
         self.preferenceStore = preferenceStore
         self.tools = tools
         self.speechRecognizer = speechRecognizer
+        self.idleTimer = idleTimer
         if let raw = preferenceStore.string(forKey: Self.backendDefaultsKey),
            let stored = ChatBackend(rawValue: raw) {
             self.selectedBackend = stored
