@@ -95,6 +95,21 @@ public protocol ChatSession: Sendable {
     /// harness asserts no attachments are routed to a session that
     /// can't handle them.
     var supportsImageInput: Bool { get }
+
+    /// Whether this backend runs tool calls itself inside a single
+    /// `stream(messages:tools:)` turn, rather than emitting `.toolCall`
+    /// deltas for the host to execute and feed back.
+    ///
+    /// Host-driven backends (Gemma, the Fake) leave this `false`: they emit
+    /// a `.toolCall`, the `ChatViewModel` executes the tool from its
+    /// `ToolRegistry`, records the result, and re-invokes the backend with
+    /// the updated history. Apple Foundation Models instead owns the loop —
+    /// its tool adapters execute the tool and feed the result straight back
+    /// into the same generation — so it sets this `true`. When `true` the
+    /// view model records both the `.toolCall` and the `.toolResult` deltas
+    /// the backend emits (for the invocation card) without re-executing the
+    /// tool or starting another turn.
+    var executesToolsInternally: Bool { get }
 }
 
 extension ChatSession {
@@ -109,6 +124,8 @@ extension ChatSession {
     }
 
     public var supportsImageInput: Bool { false }
+
+    public var executesToolsInternally: Bool { false }
 }
 
 // MARK: - FakeChatSession

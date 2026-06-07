@@ -14,27 +14,31 @@ final class AppleFMChatSessionTests: XCTestCase {
             case snapshots([String])
             case throwsAfter(snapshots: [String], error: any Error)
             case empty
+            /// Replay an arbitrary interleaving of text + tool events.
+            case events([AppleFMEvent])
         }
 
         let script: Script
         init(script: Script) { self.script = script }
 
-        func streamResponse(to prompt: String) -> AsyncThrowingStream<String, any Error> {
+        func streamEvents(
+            prompt: String,
+            tools: [any ChatTool]
+        ) -> AsyncThrowingStream<AppleFMEvent, any Error> {
             AsyncThrowingStream { continuation in
                 let script = self.script
                 Task {
                     switch script {
                     case .snapshots(let values):
-                        for value in values {
-                            continuation.yield(value)
-                        }
+                        for value in values { continuation.yield(.text(value)) }
                         continuation.finish()
                     case .throwsAfter(let values, let error):
-                        for value in values {
-                            continuation.yield(value)
-                        }
+                        for value in values { continuation.yield(.text(value)) }
                         continuation.finish(throwing: error)
                     case .empty:
+                        continuation.finish()
+                    case .events(let events):
+                        for event in events { continuation.yield(event) }
                         continuation.finish()
                     }
                 }
@@ -135,6 +139,54 @@ final class AppleFMChatSessionTests: XCTestCase {
         let deltas = try await collect(session)
 
         XCTAssertEqual(deltas, [.token("hi"), .token(" there"), .done])
+    }
+
+    func test_executesToolsInternally_isTrue() {
+        let session = AppleFMChatSession(session: FakeLanguageModelSession(script: .empty))
+
+        XCTAssertTrue(session.executesToolsInternally)
+    }
+
+    func test_stream_toolEvents_passThroughInterleavedWithTokens() async throws {
+        let call = ChatDelta.toolCall(
+            id: "1",
+            name: "createFeedLog",
+            arguments: ToolArguments(["volumeMl": .int(120)])
+        )
+        let result = ChatDelta.toolResult(id: "1", result: ToolResult(content: "logged"))
+        let fake = FakeLanguageModelSession(script: .events([
+            .text("Logging"),
+            .toolCall(id: "1", name: "createFeedLog", arguments: ToolArguments(["volumeMl": .int(120)])),
+            .toolResult(id: "1", result: ToolResult(content: "logged")),
+            .text("Logging that now. Done!"),
+        ]))
+        let session = AppleFMChatSession(session: fake)
+
+        let deltas = try await collect(session)
+
+        XCTAssertEqual(deltas, [
+            .token("Logging"),
+            call,
+            result,
+            .token(" that now. Done!"),
+            .done,
+        ])
+    }
+
+    func test_stream_onlyToolEvents_noText_emitsDoneNotEmptyError() async throws {
+        let fake = FakeLanguageModelSession(script: .events([
+            .toolCall(id: "1", name: "createDiaperLog", arguments: ToolArguments()),
+            .toolResult(id: "1", result: ToolResult(content: "ok")),
+        ]))
+        let session = AppleFMChatSession(session: fake)
+
+        let deltas = try await collect(session)
+
+        XCTAssertEqual(deltas, [
+            .toolCall(id: "1", name: "createDiaperLog", arguments: ToolArguments()),
+            .toolResult(id: "1", result: ToolResult(content: "ok")),
+            .done,
+        ])
     }
 
     func test_cancel_stopsInFlightStream() async throws {

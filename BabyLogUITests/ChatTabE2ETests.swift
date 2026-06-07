@@ -55,22 +55,28 @@ final class ChatTabE2ETests: XCTestCase {
 
     // MARK: - Backend picker
 
-    func test_backendPicker_switchesSelection() throws {
-        // With only Gemma in the picker the app auto-switches from Apple to
-        // Gemma on first appear. Verify the selection marker reflects this and
-        // persists across a relaunch without the reset flag.
+    func test_backendPicker_switchesToAppleAndPersists() throws {
+        // Default backend is Gemma. The picker now also offers Apple; selecting
+        // it must update the selection marker and persist across a relaunch.
         let marker = app.staticTexts["chatSelectedBackendMarker"]
         XCTAssertTrue(marker.waitForExistence(timeout: 5))
-        XCTAssertEqual(marker.label, "gemma",
-                       "expected default backend to be gemma (auto-switched from apple)")
+        XCTAssertEqual(marker.label, "gemma", "expected default backend to be gemma")
 
+        app.buttons["chatBackendMenu"].tap()
+        app.buttons["chatBackendOption_apple"].tap()
+
+        let appleSelected = NSPredicate(format: "label == %@", "apple")
+        expectation(for: appleSelected, evaluatedWith: marker, handler: nil)
+        waitForExpectations(timeout: 5)
+
+        // Relaunch without the reset flag — selection should persist.
         app.terminate()
         app.launchArguments = ["--ui-testing", "-UITEST_FAKE_CHAT", "1"]
         app.launch()
 
         let markerAfter = app.staticTexts["chatSelectedBackendMarker"]
         XCTAssertTrue(markerAfter.waitForExistence(timeout: 5))
-        XCTAssertEqual(markerAfter.label, "gemma",
-                       "expected persisted backend to still be gemma after relaunch")
+        XCTAssertEqual(markerAfter.label, "apple",
+                       "expected persisted backend to be apple after relaunch")
     }
 }

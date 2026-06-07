@@ -9,6 +9,12 @@ final class FakeChatSessionTests: XCTestCase {
         XCTAssertFalse(session.supportsImageInput)
     }
 
+    func test_executesToolsInternally_defaultsFalseViaProtocolExtension() {
+        let session = FakeChatSession(script: .tokens(["hi"], perTokenDelay: .milliseconds(1)))
+
+        XCTAssertFalse(session.executesToolsInternally)
+    }
+
     func test_tokensScript_emitsEachTokenThenDone() async throws {
         let session = FakeChatSession(script: .tokens(
             ["Hello", " ", "world"],

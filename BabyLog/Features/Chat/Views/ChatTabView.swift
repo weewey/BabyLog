@@ -28,9 +28,6 @@ struct ChatTabView: View {
                 if let progress = viewModel.modelLoadProgress {
                     modelLoadingBar(progress: progress)
                 }
-                if viewModel.selectedBackend == .apple && viewModel.hasTools {
-                    appleToolHint
-                }
                 suggestionStrip
                 if let attachment = viewModel.pendingAttachment {
                     attachmentChip(attachment)
@@ -66,11 +63,6 @@ struct ChatTabView: View {
             }
         }
         .accessibilityIdentifier("chatTabRoot")
-        .onAppear {
-            if viewModel.selectedBackend == .apple {
-                viewModel.switchBackend(.gemma)
-            }
-        }
     }
 
     // MARK: - Message list
@@ -236,23 +228,6 @@ struct ChatTabView: View {
         .padding(.horizontal)
         .padding(.vertical, 8)
         .accessibilityIdentifier("chatModelLoadingBar")
-    }
-
-    private var appleToolHint: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "info.circle")
-                .foregroundStyle(.secondary)
-            Text("Apple on-device chat can't run tools yet. Switch to Gemma to log feeds by voice.")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-            Spacer(minLength: 0)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(Color.secondary.opacity(0.08))
-        .accessibilityElement(children: .combine)
-        .accessibilityIdentifier("chatAppleToolHint")
     }
 
     // MARK: - Suggestion strip
@@ -516,7 +491,7 @@ struct ChatTabView: View {
         }
     }
 
-    private var visibleBackends: [ChatBackend] { [.gemma] }
+    private var visibleBackends: [ChatBackend] { [.apple, .gemma] }
 
     private func backendTitle(_ backend: ChatBackend) -> String {
         switch backend {

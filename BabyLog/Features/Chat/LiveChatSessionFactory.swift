@@ -38,16 +38,42 @@ struct LiveChatSessionFactory: ChatSessionFactory {
     }
 
     /// Build the instructions string injected into `LanguageModelSession`
-    /// for the Apple Foundation Models backend. Kept minimal since Apple FM
-    /// doesn't support tool calling — just identity + baby context.
-    private func appleInstructions(profile: ChildProfile?) -> String? {
-        guard let profile else {
-            return "You are the BabyLog Assistant, a helpful baby tracking assistant. Be warm and brief."
-        }
+    /// for the Apple Foundation Models backend. Apple FM runs the logging
+    /// tools itself, so the instructions cover identity, baby context, the
+    /// local-time rule, and tool-use etiquette — kept compact because the
+    /// on-device model has a tight (~4k token) context window.
+    private func appleInstructions(profile: ChildProfile?) -> String {
         let fmt = DateFormatter()
-        fmt.dateFormat = "yyyy-MM-dd"
+        fmt.dateFormat = "yyyy-MM-dd HH:mm"
         fmt.locale = Locale(identifier: "en_US_POSIX")
-        let dob = fmt.string(from: profile.dateOfBirth)
-        return "You are the BabyLog Assistant helping track baby \(profile.name) (born \(dob)). Be warm and brief."
+        fmt.timeZone = .current
+        let now = fmt.string(from: Date())
+
+        let who: String
+        if let profile {
+            let dobFmt = DateFormatter()
+            dobFmt.dateFormat = "yyyy-MM-dd"
+            dobFmt.locale = Locale(identifier: "en_US_POSIX")
+            who = "You help track baby \(profile.name) (born \(dobFmt.string(from: profile.dateOfBirth)))."
+        } else {
+            who = "You help track a baby."
+        }
+
+        return """
+        You are the BabyLog Assistant. \(who)
+        The current local date and time is \(now); use local time for any dates \
+        you pass to tools (no timezone suffix) and assume the time is now unless \
+        the parent gives a specific time.
+        Use the provided tools to log feeds, diapers, growth, milestones, \
+        appointments, and pumping sessions, and to answer questions about them.
+        Act immediately with sensible defaults — never ask the parent a \
+        clarifying question for a routine log. A bare "dirty", "poo", "bm", or \
+        "soiled" means a dirty diaper; "wet" means a wet diaper; assume now for \
+        the time.
+        If the parent mentions more than one thing (for example a diaper and a \
+        feed), call a separate tool for each one.
+        After logging, confirm what you did in one warm, brief sentence. Never \
+        show internal record ids to the user.
+        """
     }
 }

@@ -28,6 +28,44 @@ final class ChatViewModelTests: XCTestCase {
         }
     }
 
+    /// Replays a fixed list of deltas once per `stream` call. Used to drive
+    /// the `executesToolsInternally` path where the backend itself emits
+    /// both `.toolCall` and `.toolResult`.
+    private final class DeltaSession: ChatSession, @unchecked Sendable {
+        let deltas: [ChatDelta]
+        let executesToolsInternally: Bool
+        init(deltas: [ChatDelta], executesToolsInternally: Bool) {
+            self.deltas = deltas
+            self.executesToolsInternally = executesToolsInternally
+        }
+        func stream(_ text: String) -> AsyncThrowingStream<ChatDelta, any Error> {
+            AsyncThrowingStream { continuation in
+                for delta in deltas { continuation.yield(delta) }
+                continuation.finish()
+            }
+        }
+        func cancel() {}
+    }
+
+    private struct DeltaFactory: ChatSessionFactory {
+        let make: @Sendable () -> any ChatSession
+        func makeSession(for backend: ChatBackend) throws -> any ChatSession { make() }
+    }
+
+    /// Records whether the host executed it. For internal-execution backends
+    /// the host must never call this.
+    private final class SpyTool: ChatTool, @unchecked Sendable {
+        let name = "spyTool"
+        let description = "spy"
+        let inputSchema = ToolInputSchema(properties: [], required: [])
+        let requiresConfirmation = false
+        private(set) var executeCount = 0
+        func execute(arguments: ToolArguments) async throws -> ToolResult {
+            executeCount += 1
+            return ToolResult(content: "host-executed")
+        }
+    }
+
     private func makeVM(
         script: FakeChatSession.Script = .tokens([], perTokenDelay: .milliseconds(0)),
         store: ChatBackendPreferenceStore = InMemoryStore()
@@ -712,5 +750,86 @@ final class ChatViewModelTests: XCTestCase {
 
         XCTAssertEqual(vm.error, .toolLoopLimitReached)
         XCTAssertFalse(vm.isStreaming)
+    }
+
+    // MARK: - Internal tool execution (Apple FM)
+
+    func test_internalToolExecution_recordsCardsWithoutHostExecutingTool() async {
+        let spy = SpyTool()
+        let session = DeltaSession(
+            deltas: [
+                .toolCall(id: "call-1", name: "spyTool", arguments: ToolArguments()),
+                .toolResult(id: "call-1", result: ToolResult(content: "logged 120 ml")),
+                .token("Done!"),
+                .done,
+            ],
+            executesToolsInternally: true
+        )
+        let vm = ChatViewModel(
+            factory: DeltaFactory(make: { session }),
+            preferenceStore: InMemoryStore(),
+            tools: ToolRegistry([spy])
+        )
+        vm.input = "log a feed"
+
+        vm.send()
+        await waitUntil { !vm.isStreaming }
+
+        // The host must not execute the tool — the backend already did.
+        XCTAssertEqual(spy.executeCount, 0)
+
+        // Both the call and result cards are recorded, paired by id.
+        let callEntry = vm.messages.compactMap { msg -> String? in
+            if case let .call(id, name, _)? = msg.toolEntry, id == "call-1" { return name }
+            return nil
+        }
+        let resultContent = vm.messages.compactMap { msg -> String? in
+            if case let .result(id, _, result)? = msg.toolEntry, id == "call-1" { return result.content }
+            return nil
+        }
+        XCTAssertEqual(callEntry, ["spyTool"])
+        XCTAssertEqual(resultContent, ["logged 120 ml"])
+
+        // The assistant's summary text lands (the bubble precedes the tool
+        // cards in the array under single-turn internal execution).
+        let assistantText = vm.messages.first(where: { $0.role == .assistant })?.text
+        XCTAssertEqual(assistantText, "Done!")
+        XCTAssertFalse(vm.isStreaming)
+    }
+
+    func test_internalToolExecution_doneIsTerminalDespiteToolCall() async {
+        // A second factory call would mean the host re-looped (host-driven
+        // semantics). With internal execution, `.done` ends the turn, so the
+        // factory is asked for exactly one session.
+        let callCount = LockedInt()
+        let vm = ChatViewModel(
+            factory: DeltaFactory(make: {
+                callCount.increment()
+                return DeltaSession(
+                    deltas: [
+                        .toolCall(id: "c", name: "spyTool", arguments: ToolArguments()),
+                        .toolResult(id: "c", result: ToolResult(content: "ok")),
+                        .done,
+                    ],
+                    executesToolsInternally: true
+                )
+            }),
+            preferenceStore: InMemoryStore(),
+            tools: ToolRegistry([SpyTool()])
+        )
+        vm.input = "log"
+
+        vm.send()
+        await waitUntil { !vm.isStreaming }
+
+        XCTAssertEqual(callCount.value, 1)
+    }
+
+    /// Tiny thread-safe counter for the factory-call assertion above.
+    private final class LockedInt: @unchecked Sendable {
+        private let lock = NSLock()
+        private var _value = 0
+        var value: Int { lock.lock(); defer { lock.unlock() }; return _value }
+        func increment() { lock.lock(); _value += 1; lock.unlock() }
     }
 }

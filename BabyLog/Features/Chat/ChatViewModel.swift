@@ -401,7 +401,8 @@ public final class ChatViewModel {
             let history = messages.filter { $0.role != .tool || $0.toolEntry != nil }
             let turnOutcome = await drain(
                 stream: session.stream(messages: history, tools: tools),
-                assistantId: assistantId
+                assistantId: assistantId,
+                executesToolsInternally: session.executesToolsInternally
             )
 
             switch turnOutcome {
@@ -465,9 +466,14 @@ public final class ChatViewModel {
 
     private func drain(
         stream: AsyncThrowingStream<ChatDelta, Swift.Error>,
-        assistantId: UUID
+        assistantId: UUID,
+        executesToolsInternally: Bool
     ) async -> TurnOutcome {
         var sawToolCall = false
+        // Maps a `.toolCall` id to its tool name so a backend-emitted
+        // `.toolResult` (which carries only the id) can be recorded with the
+        // right name. Only used when the backend executes tools internally.
+        var toolNamesById: [String: String] = [:]
         do {
             for try await delta in stream {
                 if Task.isCancelled { return .cancelled }
@@ -497,21 +503,35 @@ public final class ChatViewModel {
                     modelLoadProgress = nil
                     sawToolCall = true
                     appendToolCallMessage(id: id, name: name, arguments: arguments)
-                    let result = await executeTool(name: name, arguments: arguments)
-                    appendToolResultMessage(id: id, name: name, result: result)
-                case .toolResult:
-                    // Backends normally don't emit these; the VM produces
-                    // them locally. If one arrives we ignore it.
-                    break
+                    if executesToolsInternally {
+                        // The backend (Apple FM) runs the tool itself and
+                        // emits the matching `.toolResult` delta below. Just
+                        // record the call card and remember the name.
+                        toolNamesById[id] = name
+                    } else {
+                        let result = await executeTool(name: name, arguments: arguments)
+                        appendToolResultMessage(id: id, name: name, result: result)
+                    }
+                case let .toolResult(id, result):
+                    if executesToolsInternally {
+                        // Pair the backend-executed result with its call card.
+                        appendToolResultMessage(
+                            id: id,
+                            name: toolNamesById[id] ?? "",
+                            result: result
+                        )
+                    }
+                    // Host-driven backends don't emit these; the VM produces
+                    // them locally, so any that arrive there are ignored.
                 case let .modelLoading(progress):
                     modelLoadProgress = max(0, min(1, progress))
                 case .done:
                     modelLoadProgress = nil
-                    return sawToolCall ? .toolsRequested : .done
+                    return (sawToolCall && !executesToolsInternally) ? .toolsRequested : .done
                 }
             }
             // Stream ended without .done — treat like normal completion.
-            return sawToolCall ? .toolsRequested : .done
+            return (sawToolCall && !executesToolsInternally) ? .toolsRequested : .done
         } catch is CancellationError {
             return .cancelled
         } catch {
