@@ -63,6 +63,7 @@ struct RootTabView: View {
             : .standard
         if args.contains("-UITEST_RESET_CHAT") {
             suite.removeObject(forKey: "chat.selectedBackend")
+            suite.removeObject(forKey: ChatBackendDefaulting.migrationKey)
         }
         let factory: any ChatSessionFactory = forceFake
             ? FakeChatSessionFactory()
@@ -133,9 +134,19 @@ struct RootTabView: View {
         recognizer = nil
         #endif
 
+        // Default to crash-immune Apple FM when available (and migrate existing
+        // Gemma/Qwen users once). Forced off under UI testing so the fake-chat
+        // tests stay deterministic on Gemma.
+        let backendStore = UserDefaultsChatBackendStore(defaults: suite)
+        let defaultBackend = ChatBackendDefaulting.resolveDefault(
+            store: backendStore,
+            appleAvailable: !forceFake && AppleFMAvailability.isAvailable
+        )
+
         return ChatViewModel(
             factory: factory,
-            preferenceStore: UserDefaultsChatBackendStore(defaults: suite),
+            preferenceStore: backendStore,
+            defaultBackend: defaultBackend,
             tools: tools,
             speechRecognizer: recognizer,
             idleTimer: forceFake ? nil : UIApplicationIdleTimer()
