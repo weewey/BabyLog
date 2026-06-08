@@ -47,34 +47,10 @@ final class Gemma4MLXChatSession: BabyLogCore.ChatSession, @unchecked Sendable {
         cachedContainer = container
     }
 
-    /// Register and start a background model-load task, serialized via
-    /// `inFlightTask` so any concurrent `stream()` call automatically
-    /// awaits the load rather than racing and crashing MLX.
-    /// Call once at app launch — subsequent calls are no-ops.
-    static func startWarmUp(loader: any Gemma4ModelLoader = LiveGemma4ModelLoader()) {
-        lock.lock()
-        guard cachedContainer == nil, inFlightTask == nil else {
-            lock.unlock()
-            return
-        }
-        let task = Task<Void, Never>(priority: .utility) {
-            guard let container = try? await loader.loadContainer(progress: { _ in }) else {
-                return
-            }
-            Self.storeContainer(container)
-        }
-        inFlightTask = task
-        lock.unlock()
-    }
-
-    /// Async overload kept for testability. Prefer `startWarmUp()` at the
-    /// call site unless you need to await completion.
-    static func warmUp(
-        loader: any Gemma4ModelLoader = LiveGemma4ModelLoader()
-    ) async {
-        startWarmUp(loader: loader)
-        if let task = currentInFlight() { await task.value }
-    }
+    // Gemma is loaded lazily on the first `stream()` that uses it (see
+    // `ensureContainer`) — there is no launch-time warm-up. `inFlightTask`
+    // still serializes in-flight generations so two MLX inferences never run
+    // at once (which crashes MLX).
 
     private static func setInFlight(_ task: Task<Void, Never>?) {
         lock.lock(); defer { lock.unlock() }

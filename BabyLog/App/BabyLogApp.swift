@@ -34,15 +34,12 @@ struct BabyLogApp: App {
             fatalError("[BabyLogApp] SwiftData container failed to initialise: \(error)")
         }
 
-        // Gemma is the only chat backend. Start loading the model container
-        // at app launch so the first chat turn doesn't pay the cold-start penalty.
-        // startWarmUp() registers the load task in inFlightTask synchronously,
-        // so any concurrent stream() call awaits the load rather than racing it.
-        #if !targetEnvironment(simulator)
-        if !isUITesting {
-            Gemma4MLXChatSession.startWarmUp()
-        }
-        #endif
+        // Note: the chat defaults to Apple Foundation Models (out-of-process,
+        // crash-immune). The Gemma MLX model is loaded/downloaded lazily on the
+        // first chat turn that actually uses it (`Gemma4MLXChatSession.stream`
+        // → `ensureContainer`, surfaced as a `.modelLoading` progress bar) —
+        // we deliberately do NOT warm it at launch, so users who never pick
+        // Gemma never pay the ~1.5 GB download or the load cost.
     }
 
     /// Registers the background feed-refresh task. Called from
