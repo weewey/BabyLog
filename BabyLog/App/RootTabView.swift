@@ -237,7 +237,14 @@ struct RootTabView: View {
                                 growthRepository: sync.makeGrowthMeasurementRepository(),
                                 pumpingRepository: sync.makePumpingSessionRepository(),
                                 milestoneRepository: sync.makeMilestoneRepository(),
-                                appointmentRepository: sync.makeMedicalAppointmentRepository()
+                                appointmentRepository: sync.makeMedicalAppointmentRepository(),
+                                // Narrate with on-device Apple FM (zero download,
+                                // crash-immune). Falls back to the structured card
+                                // when unavailable.
+                                chatSessionFactory: LiveChatSessionFactory(profileLoader: {
+                                    try? SwiftDataChildProfileRepository(context: context).load()
+                                }),
+                                narrationBackend: .apple
                             )
                         }
                     )

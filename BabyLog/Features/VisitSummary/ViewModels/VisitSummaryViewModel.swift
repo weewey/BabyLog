@@ -18,6 +18,12 @@ final class VisitSummaryViewModel {
     private(set) var state: State = .idle
     private(set) var summary: VisitSummary?
 
+    /// On-device LLM narration of the summary. Best-effort: empty when the
+    /// model is unavailable or fails — the structured card + share text stand
+    /// on their own.
+    private(set) var narration: String = ""
+    private(set) var isNarrating: Bool = false
+
     private let profileRepository: any ChildProfileRepository
     private let feedRepository: any FeedLogRepository
     private let diaperRepository: any DiaperLogRepository
@@ -29,6 +35,12 @@ final class VisitSummaryViewModel {
     private let calendar: Calendar
     private let builder = VisitSummaryBuilder()
 
+    /// Optional on-device LLM used to narrate the summary. `nil` disables
+    /// narration (the structured card is shown alone).
+    private let chatSessionFactory: (any ChatSessionFactory)?
+    private let narrationBackend: ChatBackend
+    private var narrationTask: Task<Void, Never>?
+
     init(
         profileRepository: any ChildProfileRepository,
         feedRepository: any FeedLogRepository,
@@ -38,7 +50,9 @@ final class VisitSummaryViewModel {
         milestoneRepository: any MilestoneRepository,
         appointmentRepository: any MedicalAppointmentRepository,
         clock: any Clock = SystemClock(),
-        calendar: Calendar = .current
+        calendar: Calendar = .current,
+        chatSessionFactory: (any ChatSessionFactory)? = nil,
+        narrationBackend: ChatBackend = .apple
     ) {
         self.profileRepository = profileRepository
         self.feedRepository = feedRepository
@@ -49,6 +63,8 @@ final class VisitSummaryViewModel {
         self.appointmentRepository = appointmentRepository
         self.clock = clock
         self.calendar = calendar
+        self.chatSessionFactory = chatSessionFactory
+        self.narrationBackend = narrationBackend
     }
 
     /// Plain-text payload for the share sheet (empty until loaded).
@@ -79,8 +95,41 @@ final class VisitSummaryViewModel {
                 calendar: calendar
             )
             state = .loaded
+            if let summary { beginNarration(of: summary) }
         } catch {
             state = .failed(String(describing: error))
+        }
+    }
+
+    /// Stop any in-flight narration (e.g. when the sheet is dismissed).
+    func cancelNarration() {
+        narrationTask?.cancel()
+        narrationTask = nil
+        isNarrating = false
+    }
+
+    private func beginNarration(of summary: VisitSummary) {
+        guard let chatSessionFactory else { return }
+        guard let session = try? chatSessionFactory.makeSession(for: narrationBackend) else {
+            return // model unavailable on this device — structured card stands alone
+        }
+        narration = ""
+        isNarrating = true
+        let prompt = summary.narrationPrompt(calendar: calendar)
+        narrationTask = Task { [weak self] in
+            let messages = [ChatMessage(role: .user, text: prompt)]
+            do {
+                for try await delta in session.stream(messages: messages, tools: nil) {
+                    if Task.isCancelled { break }
+                    if case let .token(chunk) = delta { self?.narration += chunk }
+                }
+            } catch {
+                // Best-effort: drop a partial/failed narration; the structured
+                // summary and share text remain fully usable.
+                self?.narration = ""
+            }
+            self?.isNarrating = false
+            self?.narrationTask = nil
         }
     }
 }

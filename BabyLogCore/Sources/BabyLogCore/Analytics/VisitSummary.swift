@@ -229,3 +229,27 @@ extension VisitSummary {
         String(format: "%.1f", value)
     }
 }
+
+// MARK: - LLM narration
+
+extension VisitSummary {
+
+    /// Prompt for the on-device model to turn this digest into a few warm,
+    /// plain-language sentences. The model is told explicitly to use only the
+    /// numbers given (never invent figures) and to avoid medical judgments —
+    /// the deterministic `plainText` remains the source of truth and the
+    /// fallback when narration is unavailable.
+    public func narrationPrompt(calendar: Calendar = .current) -> String {
+        """
+        You are helping a parent get ready for their baby's pediatrician visit. \
+        Below is a factual summary of what they logged this period. Write 2 to 4 \
+        warm, plain-language sentences they could read aloud to the doctor or skim \
+        themselves — cover the trends that stand out (feeding, diapers, growth, \
+        sleep stretches, milestones). Use ONLY the numbers given; never invent or \
+        change a figure. Do not give medical advice or say whether values are \
+        healthy. No bullet points or headings — just a short paragraph.
+
+        \(plainText(calendar: calendar))
+        """
+    }
+}

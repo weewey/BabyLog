@@ -22,7 +22,7 @@ final class VisitSummaryViewModelTests: XCTestCase {
     private func makeVM(
         feedRepo: any FeedLogRepository,
         appointments: [MedicalAppointment] = [],
-        feeds: [FeedLog] = []
+        chatFactory: (any ChatSessionFactory)? = nil
     ) async -> VisitSummaryViewModel {
         let apptRepo = InMemoryMedicalAppointmentRepository()
         for a in appointments { try? await apptRepo.save(a) }
@@ -34,8 +34,21 @@ final class VisitSummaryViewModelTests: XCTestCase {
             growthRepository: InMemoryGrowthMeasurementRepository(),
             pumpingRepository: InMemoryPumpingSessionRepository(),
             milestoneRepository: InMemoryMilestoneRepository(),
-            appointmentRepository: apptRepo
+            appointmentRepository: apptRepo,
+            chatSessionFactory: chatFactory
         )
+    }
+
+    private func waitUntil(
+        _ check: @escaping @MainActor () -> Bool,
+        timeout: TimeInterval = 2.0
+    ) async {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if check() { return }
+            try? await Task.sleep(for: .milliseconds(10))
+        }
+        XCTFail("waitUntil timed out")
     }
 
     func test_load_buildsSummaryAndShareText() async {
@@ -62,5 +75,42 @@ final class VisitSummaryViewModelTests: XCTestCase {
         }
         XCTAssertNil(vm.summary)
         XCTAssertTrue(vm.shareText.isEmpty)
+    }
+
+    // MARK: - V2 narration
+
+    func test_load_narratesViaChatFactory() async {
+        let factory = FakeChatSessionFactory { _ in
+            .tokens(["Ethan ", "is ", "thriving."], perTokenDelay: .milliseconds(0))
+        }
+        let vm = await makeVM(feedRepo: InMemoryFeedLogRepository(), chatFactory: factory)
+
+        await vm.load()
+        await waitUntil { !vm.isNarrating }
+
+        XCTAssertEqual(vm.narration, "Ethan is thriving.")
+        XCTAssertEqual(vm.state, .loaded)
+    }
+
+    func test_load_narrationFailure_leavesNarrationEmptyButSummaryLoaded() async {
+        struct Boom: Error {}
+        let factory = FakeChatSessionFactory { _ in .failsAfter(0, error: Boom()) }
+        let vm = await makeVM(feedRepo: InMemoryFeedLogRepository(), chatFactory: factory)
+
+        await vm.load()
+        await waitUntil { !vm.isNarrating }
+
+        XCTAssertEqual(vm.narration, "")
+        XCTAssertEqual(vm.state, .loaded)
+        XCTAssertNotNil(vm.summary)
+    }
+
+    func test_load_withoutChatFactory_doesNotNarrate() async {
+        let vm = await makeVM(feedRepo: InMemoryFeedLogRepository(), chatFactory: nil)
+
+        await vm.load()
+
+        XCTAssertFalse(vm.isNarrating)
+        XCTAssertEqual(vm.narration, "")
     }
 }

@@ -30,6 +30,7 @@ struct VisitSummaryView: View {
                 }
         }
         .task { await viewModel.load() }
+        .onDisappear { viewModel.cancelNarration() }
     }
 
     @ViewBuilder
@@ -55,6 +56,24 @@ struct VisitSummaryView: View {
 
     private func loaded(_ summary: VisitSummary) -> some View {
         List {
+            if viewModel.isNarrating || !viewModel.narration.isEmpty {
+                Section {
+                    VStack(alignment: .leading, spacing: 6) {
+                        if viewModel.narration.isEmpty {
+                            HStack(spacing: 6) {
+                                ProgressView().controlSize(.small)
+                                Text("Summarizing…").font(.footnote).foregroundStyle(.secondary)
+                            }
+                        } else {
+                            Text(viewModel.narration).font(.callout)
+                        }
+                    }
+                    .accessibilityIdentifier("visitSummaryNarration")
+                } header: {
+                    Label("At a glance", systemImage: "sparkles")
+                }
+            }
+
             Section {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(summary.childName).font(.title3.weight(.semibold))
